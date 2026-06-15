@@ -6,40 +6,40 @@
 <section class="hero">
   <canvas id="heroCanvas"></canvas>
   <div class="hero-content">
-    <div class="hero-badge animate-fade-in">🇦🇿 Azərbaycanın №1 Heyvan Bazarı</div>
+    <div class="hero-badge animate-fade-in">{{ t('hero_badge') }}</div>
     <h1 class="hero-title animate-slide-up">
-      Mal, Quş, Arı<br>
-      <span class="gradient-text">Alın & Satın</span>
+      {{ t('hero_title_1') }}<br>
+      <span class="gradient-text">{{ t('hero_title_2') }}</span>
     </h1>
     <p class="hero-subtitle animate-slide-up delay-1">
-      {{ stats.active_listings }}+ aktiv elan · {{ stats.total_users }}+ istifadəçi
+      {{ stats.active_listings }}+ {{ t('active_listings') }} · {{ stats.total_users }}+ {{ t('users') }}
     </p>
     <div class="hero-search animate-slide-up delay-2">
       <form action="{{ url_for('search') }}" method="get" class="hero-search-form">
         <div class="hero-search-inner">
           <select name="cat">
-            <option value="">Bütün kateqoriyalar</option>
+            <option value="">{{ t('all_categories') }}</option>
             {% for slug, cat in categories.items() %}
-            <option value="{{ slug }}">{{ cat.icon }} {{ cat.name }}</option>
+            <option value="{{ slug }}">{{ cat.icon }} {{ t('cat_' + slug) }}</option>
             {% endfor %}
           </select>
-          <input type="text" name="q" placeholder="İnək, qoyun, bal...">
-          <button type="submit"><i class="fas fa-search"></i> Axtar</button>
+          <input type="text" name="q" placeholder="{{ t('search_hint') }}">
+          <button type="submit"><i class="fas fa-search"></i> {{ t('search_btn') }}</button>
         </div>
       </form>
     </div>
     <div class="hero-stats animate-fade-in delay-3">
       <div class="hero-stat">
         <span class="stat-num">{{ stats.active_listings }}</span>
-        <span class="stat-label">Aktiv Elan</span>
+        <span class="stat-label">{{ t('stat_active') }}</span>
       </div>
       <div class="hero-stat">
         <span class="stat-num">{{ stats.total_users }}</span>
-        <span class="stat-label">İstifadəçi</span>
+        <span class="stat-label">{{ t('stat_users') }}</span>
       </div>
       <div class="hero-stat">
         <span class="stat-num">{{ stats.today_listings }}</span>
-        <span class="stat-label">Bu gün</span>
+        <span class="stat-label">{{ t('stat_today') }}</span>
       </div>
     </div>
   </div>
@@ -52,8 +52,8 @@
 <section class="section">
   <div class="container">
     <div class="section-header">
-      <h2>Kateqoriyalar</h2>
-      <p>İstədiyiniz növü seçin</p>
+      <h2>{{ t('categories') }}</h2>
+      <p>{{ t('cat_sub') }}</p>
     </div>
     <div class="cat-grid">
       {% for slug, cat in categories.items() %}
@@ -61,9 +61,9 @@
         <div class="cat-card-inner">
           <div class="cat-card-icon">{{ cat.icon }}</div>
           <div class="cat-card-content">
-            <h3>{{ cat.name }}</h3>
+            <h3>{{ t('cat_' + slug) }}</h3>
             <p>{{ cat.subcategories | join(', ') | truncate(50) }}</p>
-            <span class="cat-card-count">{{ cat_counts.get(slug, 0) }} elan</span>
+            <span class="cat-card-count">{{ cat_counts.get(slug, 0) }} {{ t('listings_word') }}</span>
           </div>
           <div class="cat-card-arrow"><i class="fas fa-arrow-right"></i></div>
         </div>
@@ -78,8 +78,8 @@
 <section class="section">
   <div class="container">
     <div class="section-header">
-      <h2>Son Elanlar</h2>
-      <a href="{{ url_for('search') }}" class="see-all">Hamısını gör <i class="fas fa-arrow-right"></i></a>
+      <h2>{{ t('recent') }}</h2>
+      <a href="{{ url_for('search') }}" class="see-all">{{ t('see_all') }} <i class="fas fa-arrow-right"></i></a>
     </div>
     {% if recent %}
     <div class="listings-grid">
@@ -90,9 +90,9 @@
     {% else %}
     <div class="empty-state">
       <div class="empty-icon">📋</div>
-      <h3>Hələ elan yoxdur</h3>
-      <p>İlk elanı siz əlavə edin!</p>
-      <a href="{{ url_for('create_listing') }}" class="btn btn-primary">Elan Əlavə Et</a>
+      <h3>{{ t('no_listings') }}</h3>
+      <p>{{ t('no_listings_sub') }}</p>
+      <a href="{{ url_for('create_listing') }}" class="btn btn-primary">{{ t('add_listing') }}</a>
     </div>
     {% endif %}
   </div>
@@ -102,24 +102,24 @@
 <section class="section section-how">
   <div class="container">
     <div class="section-header">
-      <h2>Necə İşləyir?</h2>
-      <p>Sadə 3 addımda elan verin</p>
+      <h2>{{ t('how_title') }}</h2>
+      <p>{{ t('how_sub') }}</p>
     </div>
     <div class="how-grid">
       <div class="how-card" data-step="1">
         <div class="how-icon">📝</div>
-        <h3>Qeydiyyat</h3>
-        <p>Nömrəniz və şifrənizlə pulsuz qeydiyyatdan keçin</p>
+        <h3>{{ t('step1_title') }}</h3>
+        <p>{{ t('step1_desc') }}</p>
       </div>
       <div class="how-card" data-step="2">
         <div class="how-icon">📸</div>
-        <h3>Elan Əlavə Et</h3>
-        <p>Şəkil yükləyin, qiymət və məlumatları doldurun</p>
+        <h3>{{ t('step2_title') }}</h3>
+        <p>{{ t('step2_desc') }}</p>
       </div>
       <div class="how-card" data-step="3">
         <div class="how-icon">📞</div>
-        <h3>Alıcıları Gözləyin</h3>
-        <p>Elanınız 30 gün aktiv qalır, alıcılar sizinlə əlaqə saxlayır</p>
+        <h3>{{ t('step3_title') }}</h3>
+        <p>{{ t('step3_desc') }}</p>
       </div>
     </div>
   </div>

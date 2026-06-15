@@ -790,3 +790,13 @@ input,select,textarea{font-family:inherit}
   .chat-card{height:75vh}
   .chat-msg{max-width:85%}
 }
+
+/* ── Dil seçici (i18n) ── */
+.lang-switch{display:inline-flex;align-items:center;gap:2px;background:var(--surface2);border-radius:50px;padding:3px}
+.lang-opt{font-size:12px;font-weight:700;color:var(--text-muted);padding:5px 9px;border-radius:50px;line-height:1;transition:var(--transition)}
+.lang-opt:hover{color:var(--primary)}
+.lang-opt.active{background:var(--primary);color:#fff}
+.lang-switch-mobile{justify-content:center;width:100%;margin-top:8px}
+@media(max-width:900px){
+  .navbar-actions .lang-switch{display:none}
+}

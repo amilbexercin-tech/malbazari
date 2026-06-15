@@ -16,7 +16,7 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="next" value="{{ request.full_path }}">
     <button type="submit" class="fav-btn {% if l.id in favorite_ids %}fav-on{% endif %}"
-            title="Seçilmişlərə əlavə et" aria-label="Seçilmişlər">
+            title="{{ t('add_to_fav') }}" aria-label="{{ t('favorites') }}">
       <i class="{% if l.id in favorite_ids %}fas{% else %}far{% endif %} fa-heart"></i>
     </button>
   </form>
@@ -31,7 +31,7 @@
     </h3>
     <div class="card-footer">
       <div class="card-price">
-        {% if l.price %}{{ "%.0f"|format(l.price|float) }} AZN{% else %}Razılaşma ilə{% endif %}
+        {% if l.price %}{{ "%.0f"|format(l.price|float) }} AZN{% else %}{{ t('negotiable') }}{% endif %}
       </div>
       <div class="card-info">
         <span><i class="fas fa-eye"></i> {{ l.views }}</span>

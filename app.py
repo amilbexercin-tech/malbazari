@@ -12,6 +12,7 @@ from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect
 from PIL import Image
 import database as db
+import i18n
 from config import (SECRET_KEY, UPLOAD_FOLDER, MAX_CONTENT_LENGTH,
                     CATEGORIES, REGIONS, VIP_PRICE, BOOST_PRICE, BOOST_DAYS,
                     BASE_DIR, MAX_IMAGES, SUBCATEGORY_EXAMPLES, DEBUG)
@@ -139,6 +140,7 @@ def _maintenance_before_request():
 
 @app.context_processor
 def inject_globals():
+    lang = i18n.normalize_lang(session.get('lang', i18n.DEFAULT_LANG))
     return {
         'categories': CATEGORIES,
         'regions': REGIONS,
@@ -153,7 +155,20 @@ def inject_globals():
         'stats': db.get_stats() if 'user_id' in session and session.get('is_admin') else None,
         'unread_messages': db.count_unread(session['user_id']) if 'user_id' in session else 0,
         'favorite_ids': db.get_favorite_ids(session['user_id']) if 'user_id' in session else set(),
+        'lang': lang,
+        'languages': i18n.LANGUAGES,
+        't': lambda key: i18n.t(key, lang),
     }
+
+# ─── Language ────────────────────────────────────────────────────────────────
+
+@app.route('/dil/<lang>')
+def set_language(lang):
+    session['lang'] = i18n.normalize_lang(lang)
+    nxt = request.referrer
+    if nxt and nxt.startswith(request.host_url):
+        return redirect(nxt)
+    return redirect(url_for('index'))
 
 # ─── Public Routes ───────────────────────────────────────────────────────────
 
