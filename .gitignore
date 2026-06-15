@@ -17,6 +17,9 @@ __pycache__/
 static/uploads/*
 !static/uploads/.gitkeep
 
+# Yedəklər
+backups/
+
 # Virtual environment
 venv/
 .venv/

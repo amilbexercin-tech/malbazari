@@ -32,6 +32,9 @@
     </form>
 
     <div class="auth-footer">
+      <a href="{{ url_for('forgot_password') }}">Şifrəni unutmusunuz?</a>
+    </div>
+    <div class="auth-footer">
       {{ t('no_account') }} <a href="{{ url_for('register') }}">{{ t('register') }}</a>
     </div>
   </div>

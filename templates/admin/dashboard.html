@@ -54,12 +54,16 @@
     <span>İstifadəçilər</span>
   </a>
   <a href="{{ url_for('admin_settings') }}" class="quick-link">
-    <i class="fas fa-credit-card"></i>
-    <span>Kart Nömrəsi</span>
+    <i class="fas fa-cog"></i>
+    <span>Parametrlər</span>
+  </a>
+  <a href="{{ url_for('admin_backup') }}" class="quick-link">
+    <i class="fas fa-download"></i>
+    <span>Yedək Al</span>
   </a>
   <a href="{{ url_for('admin_editor') }}" class="quick-link">
     <i class="fas fa-code"></i>
-    <span>AI Kod Redaktoru</span>
+    <span>Kod Redaktoru</span>
   </a>
 </div>
 {% endblock %}

@@ -9,8 +9,9 @@
 | `ADMIN_PASSWORD` | İlk admin parolu (yalnız boş bazada). |
 | `FLASK_DEBUG` | **Production-da TƏYİN ETMƏ** (defolt söndürülüb). |
 | `SESSION_COOKIE_SECURE` | HTTPS arxasında **1** təyin et (sessiya kukisi yalnız HTTPS-də). Lokal HTTP-də boş saxla. |
-| `SMS_PROVIDER` | OTP üçün: `dev` (kod ekranda) və ya real provayder (`twilio`). `sms.py`-də tamamla. |
-| `SMS_API_KEY` / `SMS_SENDER` | Real SMS provayderi üçün açar və göndərən adı. |
+| `SMS_PROVIDER` | OTP üçün: `dev` (kod ekranda) və ya `twilio` (real SMS). |
+| `SMS_ACCOUNT_SID` | Twilio Account SID (real SMS üçün). |
+| `SMS_API_KEY` / `SMS_SENDER` | Twilio Auth Token və göndərən nömrə (+1…). |
 
 Nümunə:
 ```bash
@@ -89,9 +90,14 @@ sudo systemctl enable --now malbazari
 ## 6. Yedəkləmə (backup)
 
 Bütün məlumat `malbazari.db` faylındadır + şəkillər `static/uploads/`-da.
+
+**Avtomatik yedək** (`backup.py` — baza + şəkilləri zip-ə yığır, son 14-ü saxlayır):
 ```bash
-cp malbazari.db backups/malbazari-$(date +%F).db
+python backup.py        # əl ilə
+# Cron (hər gecə 03:00):
+0 3 * * * cd /path/to/malbazari && /path/to/venv/bin/python backup.py
 ```
+Admin paneldən də **"Yedək Al"** düyməsi ilə zip yükləyə bilərsən.
 
 ## 7. Təhlükəsizlik xatırlatması
 

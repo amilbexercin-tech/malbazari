@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Şifrəni unutdum — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-bg"></div>
+  <div class="auth-card">
+    <div class="auth-logo">🔑</div>
+    <h1>Şifrəni Bərpa Et</h1>
+    <p class="auth-sub">Telefon nömrənizi yazın — təsdiq kodu göndərəcəyik</p>
+
+    <form method="post" class="auth-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label><i class="fas fa-phone"></i> Telefon nömrəsi</label>
+        <input type="tel" name="phone" placeholder="+994 XX XXX XX XX" required autofocus>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">
+        <i class="fas fa-paper-plane"></i> Kod göndər
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <a href="{{ url_for('login') }}">Girişə qayıt</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

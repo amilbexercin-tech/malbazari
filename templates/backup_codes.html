@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Bərpa kodları — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-bg"></div>
+  <div class="auth-card" style="max-width:460px">
+    <div class="auth-logo">🗝️</div>
+    <h1>Bərpa Kodları</h1>
+    <p class="auth-sub">Telefonunuzu itirsəniz, bu kodlarla bir dəfə daxil ola bilərsiniz. <strong>İndi saxlayın</strong> — bu səhifə bir daha göstərilməyəcək!</p>
+
+    <div class="backup-codes">
+      {% for c in codes %}
+      <code>{{ c }}</code>
+      {% endfor %}
+    </div>
+
+    <p class="qr-secret" style="margin-top:16px">
+      Hər kod yalnız <strong>bir dəfə</strong> işləyir. Təhlükəsiz yerdə saxlayın (kağız və ya parol meneceri).
+    </p>
+
+    <a href="{{ nxt }}" class="btn btn-primary btn-full" style="margin-top:8px">
+      <i class="fas fa-check"></i> Saxladım, davam et
+    </a>
+  </div>
+</div>
+{% endblock %}

@@ -11,9 +11,8 @@ import qrcode
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import (Flask, render_template, request, redirect, url_for,
-                   session, flash, jsonify, send_from_directory, abort)
+                   session, flash, jsonify, send_from_directory, send_file, abort)
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -436,7 +435,21 @@ def two_factor():
         return redirect(url_for('two_factor_setup'))
     if request.method == 'POST':
         code = request.form.get('code', '').strip()
-        if pyotp.TOTP(user['totp_secret']).verify(code, valid_window=1):
+        ok = pyotp.TOTP(user['totp_secret']).verify(code, valid_window=1)
+        # TOTP tutmadısa, bərpa kodunu yoxla
+        if not ok and user['backup_codes']:
+            try:
+                codes = json.loads(user['backup_codes'])
+            except Exception:
+                codes = []
+            for i, h in enumerate(codes):
+                if check_password_hash(h, code):
+                    codes.pop(i)
+                    db.set_backup_codes(user['id'], json.dumps(codes))
+                    ok = True
+                    flash('Bərpa kodu istifadə olundu. Authenticator-i yenidən qurmağı tövsiyə edirik.', 'warning')
+                    break
+        if ok:
             nxt = session.get('post_login_next')
             _finalize_login(user)
             session.pop('post_login_next', None)
@@ -465,15 +478,77 @@ def two_factor_setup():
         code = request.form.get('code', '').strip()
         if pyotp.TOTP(secret).verify(code, valid_window=1):
             db.set_totp_secret(user['id'], secret)
+            # Birdəfəlik bərpa kodları yarat (telefon itəndə giriş üçün)
+            codes = [secrets.token_hex(4) for _ in range(8)]
+            db.set_backup_codes(user['id'], json.dumps(
+                [generate_password_hash(c) for c in codes]))
             nxt = session.get('post_login_next')
             _finalize_login(user)
             session.pop('post_login_next', None)
+            session['show_backup_codes'] = codes
+            session['backup_next'] = nxt if nxt and nxt.startswith('/') else url_for('admin_dashboard')
             flash('İkili doğrulama aktivləşdi! ✅', 'success')
-            return redirect(nxt if nxt and nxt.startswith('/') else url_for('admin_dashboard'))
+            return redirect(url_for('backup_codes_view'))
         flash('Kod yanlışdır, yenidən cəhd edin.', 'danger')
     uri = pyotp.totp.TOTP(secret).provisioning_uri(name=user['phone'],
                                                    issuer_name='MalBazari.biz')
     return render_template('two_factor_setup.html', qr=_qr_data_uri(uri), secret=secret)
+
+@app.route('/2fa-berpa-kodlari')
+@admin_required
+def backup_codes_view():
+    codes = session.pop('show_backup_codes', None)
+    nxt = session.pop('backup_next', None) or url_for('admin_dashboard')
+    if not codes:
+        return redirect(url_for('admin_dashboard'))
+    return render_template('backup_codes.html', codes=codes, nxt=nxt)
+
+# ─── Parol bərpası ──────────────────────────────────────────────────────────────
+
+@app.route('/sifre-unutdum', methods=['GET', 'POST'])
+@limiter.limit("5 per 15 minutes", methods=['POST'])
+def forgot_password():
+    if request.method == 'POST':
+        phone = request.form.get('phone', '').strip()
+        user = db.get_user_by_phone(phone)
+        if user:
+            _start_otp(phone)
+            session['reset_uid'] = user['id']
+            session['reset_phone'] = phone
+        # Nömrənin mövcudluğunu açıqlamırıq
+        flash('Əgər bu nömrə qeydiyyatdadırsa, təsdiq kodu göndərildi.', 'info')
+        return redirect(url_for('reset_password'))
+    return render_template('forgot.html')
+
+@app.route('/sifre-sifirla', methods=['GET', 'POST'])
+@limiter.limit("10 per 15 minutes", methods=['POST'])
+def reset_password():
+    uid = session.get('reset_uid')
+    if not uid:
+        return redirect(url_for('forgot_password'))
+    if request.method == 'POST':
+        entered = request.form.get('code', '').strip()
+        pw = request.form.get('password', '')
+        confirm = request.form.get('confirm', '')
+        code = session.get('otp_code')
+        expires = session.get('otp_expires', 0)
+        if not code or time.time() > expires:
+            flash('Kodun vaxtı bitib. Yenidən cəhd edin.', 'warning')
+            return redirect(url_for('forgot_password'))
+        if entered != code:
+            flash('Kod yanlışdır.', 'danger')
+        elif len(pw) < 6:
+            flash('Şifrə ən az 6 simvol olmalıdır.', 'danger')
+        elif pw != confirm:
+            flash('Şifrələr uyğun gəlmir.', 'danger')
+        else:
+            db.update_password(uid, generate_password_hash(pw))
+            for k in ('otp_code', 'otp_phone', 'otp_expires', 'reset_uid', 'reset_phone'):
+                session.pop(k, None)
+            flash('Şifrəniz yeniləndi. İndi daxil ola bilərsiniz.', 'success')
+            return redirect(url_for('login'))
+    dev_code = session.get('otp_code') if SMS_PROVIDER == 'dev' else None
+    return render_template('reset.html', phone=session.get('reset_phone', ''), dev_code=dev_code)
 
 @app.route('/cixis')
 def logout():
@@ -489,6 +564,37 @@ def profile():
     rows, total = db.get_listings(user_id=uid, per_page=50)
     listings = [listing_to_dict(l) for l in rows]
     return render_template('profile.html', user=user, listings=listings, total=total)
+
+@app.route('/hesab-ayarlari', methods=['GET', 'POST'])
+@login_required
+def account_settings():
+    uid = session['user_id']
+    user = db.get_user_by_id(uid)
+    if request.method == 'POST':
+        action = request.form.get('action')
+        if action == 'name':
+            username = request.form.get('username', '').strip()[:50]
+            if username:
+                db.update_username(uid, username)
+                session['username'] = username
+                flash('Adınız yeniləndi.', 'success')
+            else:
+                flash('Ad boş ola bilməz.', 'danger')
+        elif action == 'password':
+            current = request.form.get('current', '')
+            new = request.form.get('password', '')
+            confirm = request.form.get('confirm', '')
+            if not check_password_hash(user['password_hash'], current):
+                flash('Cari şifrə yanlışdır.', 'danger')
+            elif len(new) < 6:
+                flash('Yeni şifrə ən az 6 simvol olmalıdır.', 'danger')
+            elif new != confirm:
+                flash('Yeni şifrələr uyğun gəlmir.', 'danger')
+            else:
+                db.update_password(uid, generate_password_hash(new))
+                flash('Şifrəniz dəyişdirildi.', 'success')
+        return redirect(url_for('account_settings'))
+    return render_template('account.html', user=user)
 
 # ─── Listing CRUD ────────────────────────────────────────────────────────────
 
@@ -743,8 +849,7 @@ def admin_resolve_report(rid):
 @admin_required
 def admin_settings():
     if request.method == 'POST':
-        for key in ['site_name', 'card_number', 'card_owner',
-                    'anthropic_api_key', 'contact_phone', 'contact_email']:
+        for key in ['site_name', 'anthropic_api_key', 'contact_phone', 'contact_email']:
             val = request.form.get(key, '').strip()
             db.set_setting(key, val)
         flash('Parametrlər yadda saxlanıldı.', 'success')
@@ -752,13 +857,52 @@ def admin_settings():
     settings = db.get_all_settings()
     return render_template('admin/settings.html', settings=settings)
 
+@app.route('/admin/yedek')
+@admin_required
+def admin_backup():
+    """Bazanın (tutarlı snapshot) + şəkillərin zip yedəyini yaradıb yükləyir."""
+    import zipfile
+    import tempfile
+    import sqlite3
+    from config import DATABASE_PATH
+    ts = datetime.now().strftime('%Y%m%d-%H%M%S')
+    tmp_zip = os.path.join(tempfile.gettempdir(), f'malbazari-backup-{ts}.zip')
+    tmp_db = os.path.join(tempfile.gettempdir(), f'mb-{ts}.sqlite')
+    # SQLite backup API ilə tutarlı surət
+    src = sqlite3.connect(DATABASE_PATH)
+    dst = sqlite3.connect(tmp_db)
+    with dst:
+        src.backup(dst)
+    src.close(); dst.close()
+    with zipfile.ZipFile(tmp_zip, 'w', zipfile.ZIP_DEFLATED) as z:
+        z.write(tmp_db, 'malbazari.db')
+        if os.path.isdir(UPLOAD_FOLDER):
+            for root, _, files in os.walk(UPLOAD_FOLDER):
+                for fn in files:
+                    fp = os.path.join(root, fn)
+                    z.write(fp, os.path.join('uploads', os.path.relpath(fp, UPLOAD_FOLDER)))
+    try:
+        os.remove(tmp_db)
+    except OSError:
+        pass
+    return send_file(tmp_zip, as_attachment=True, download_name=f'malbazari-backup-{ts}.zip')
+
 # ─── Admin Code Editor ────────────────────────────────────────────────────────
+
+# Təhlükəsizlik: yalnız bu uzantılar REDAKTƏ oluna bilər (RCE-nin qarşısını alır).
+# .py / .db / .secret_key və s. yazıla bilməz — admin hesabı ələ keçsə belə
+# server kodu dəyişdirilə bilməz.
+EDITABLE_EXT = {'html', 'css', 'js', 'txt', 'md', 'json'}
 
 def safe_path(rel_path):
     safe = os.path.realpath(os.path.join(BASE_DIR, rel_path))
     if not safe.startswith(os.path.realpath(BASE_DIR)):
         return None
     return safe
+
+def _is_editable(rel_path):
+    ext = rel_path.rsplit('.', 1)[-1].lower() if '.' in rel_path else ''
+    return ext in EDITABLE_EXT
 
 @app.route('/admin/kod-redaktoru')
 @admin_required
@@ -803,6 +947,9 @@ def admin_write_file():
     path = safe_path(rel)
     if not path:
         return jsonify({'error': 'İcazəsiz yol'}), 403
+    if not _is_editable(rel):
+        return jsonify({'error': 'Bu fayl tipini redaktə etmək olmaz (yalnız şablon/mətn). '
+                                 'Kod (.py) dəyişiklikləri təhlükəsizlik üçün bağlanıb.'}), 403
     # Save backup
     if os.path.isfile(path):
         with open(path, 'r', encoding='utf-8') as f:
@@ -826,6 +973,8 @@ def admin_restore_history(hid):
     path = safe_path(row['filename'])
     if not path:
         return jsonify({'error': 'İcazəsiz'}), 403
+    if not _is_editable(row['filename']):
+        return jsonify({'error': 'Bu fayl tipini bərpa etmək olmaz.'}), 403
     with open(path, 'w', encoding='utf-8') as f:
         f.write(row['content'])
     return jsonify({'ok': True})
@@ -921,6 +1070,11 @@ def forbidden(e):
 @app.errorhandler(404)
 def not_found(e):
     return render_template('error.html', code=404, msg='Səhifə tapılmadı'), 404
+
+@app.errorhandler(429)
+def too_many(e):
+    return render_template('error.html', code=429,
+                           msg='Çox sayda sorğu göndərdiniz. Bir az gözləyib yenidən cəhd edin.'), 429
 
 @app.errorhandler(500)
 def server_error(e):

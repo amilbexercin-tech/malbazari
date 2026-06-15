@@ -43,6 +43,9 @@
       <a href="{{ url_for('admin_settings') }}" class="nav-item {% if request.endpoint == 'admin_settings' %}active{% endif %}">
         <i class="fas fa-cog"></i> Parametrlər
       </a>
+      <a href="{{ url_for('admin_backup') }}" class="nav-item">
+        <i class="fas fa-download"></i> Yedək Al
+      </a>
       <a href="{{ url_for('admin_editor') }}" class="nav-item {% if request.endpoint == 'admin_editor' %}active{% endif %}">
         <i class="fas fa-code"></i> Kod Redaktoru
       </a>

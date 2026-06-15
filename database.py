@@ -57,19 +57,6 @@ def init_db():
         FOREIGN KEY (user_id) REFERENCES users(id)
     )''')
 
-    c.execute('''CREATE TABLE IF NOT EXISTS orders (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        listing_id INTEGER,
-        type TEXT NOT NULL,
-        amount REAL NOT NULL,
-        status TEXT DEFAULT 'pending',
-        note TEXT,
-        created_at TEXT DEFAULT (datetime('now')),
-        FOREIGN KEY (user_id) REFERENCES users(id),
-        FOREIGN KEY (listing_id) REFERENCES listings(id)
-    )''')
-
     c.execute('''CREATE TABLE IF NOT EXISTS settings (
         key TEXT PRIMARY KEY,
         value TEXT
@@ -116,6 +103,7 @@ def init_db():
     migrations = [
         ("users", "phone_verified", "INTEGER DEFAULT 0"),
         ("users", "totp_secret", "TEXT"),
+        ("users", "backup_codes", "TEXT"),
         ("listings", "weight_kg", "REAL"),
         ("listings", "purpose", "TEXT"),
         ("listings", "breed", "TEXT"),
@@ -134,8 +122,6 @@ def init_db():
 
     defaults = [
         ('site_name', 'MalBazari.biz'),
-        ('card_number', ''),
-        ('card_owner', ''),
         ('anthropic_api_key', ''),
         ('contact_phone', '+994 XX XXX XX XX'),
         ('contact_email', 'info@malbazari.biz'),
@@ -198,7 +184,6 @@ def delete_listing(lid):
             images = json.loads(row['images'] or '[]')
         except Exception:
             pass
-    conn.execute("DELETE FROM orders WHERE listing_id=?", (lid,))
     conn.execute("DELETE FROM favorites WHERE listing_id=?", (lid,))
     conn.execute("DELETE FROM reports WHERE listing_id=?", (lid,))
     conn.execute("DELETE FROM messages WHERE listing_id=?", (lid,))
@@ -289,7 +274,9 @@ def expire_listings():
             except Exception:
                 pass
         ph = ','.join('?' * len(ids))
-        conn.execute(f"DELETE FROM orders WHERE listing_id IN ({ph})", ids)
+        conn.execute(f"DELETE FROM favorites WHERE listing_id IN ({ph})", ids)
+        conn.execute(f"DELETE FROM reports WHERE listing_id IN ({ph})", ids)
+        conn.execute(f"DELETE FROM messages WHERE listing_id IN ({ph})", ids)
         conn.execute(f"DELETE FROM listings WHERE id IN ({ph})", ids)
 
     conn.commit(); conn.close()
@@ -359,6 +346,21 @@ def set_phone_verified(uid):
 def set_totp_secret(uid, secret):
     conn = get_db()
     conn.execute("UPDATE users SET totp_secret=? WHERE id=?", (secret, uid))
+    conn.commit(); conn.close()
+
+def update_username(uid, username):
+    conn = get_db()
+    conn.execute("UPDATE users SET username=? WHERE id=?", (username, uid))
+    conn.commit(); conn.close()
+
+def update_password(uid, password_hash):
+    conn = get_db()
+    conn.execute("UPDATE users SET password_hash=? WHERE id=?", (password_hash, uid))
+    conn.commit(); conn.close()
+
+def set_backup_codes(uid, codes_json):
+    conn = get_db()
+    conn.execute("UPDATE users SET backup_codes=? WHERE id=?", (codes_json, uid))
     conn.commit(); conn.close()
 
 # ─── Settings ────────────────────────────────────────────────────────────────

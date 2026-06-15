@@ -226,3 +226,65 @@ def test_admin_wrong_2fa_blocked(client):
     client.post("/2fa-qur", data={"code": "000000"}, follow_redirects=True)
     # Yanlış kod → admin panel hələ bağlıdır
     assert client.get("/admin/").status_code == 302
+
+
+# ─── Parol bərpası ────────────────────────────────────────────
+
+def test_password_reset_flow(client):
+    register(client, "ResetUser", "+994500000020")
+    logout(client)
+    # Bərpa başlat
+    client.post("/sifre-unutdum", data={"phone": "+994500000020"}, follow_redirects=True)
+    with client.session_transaction() as s:
+        code = s["otp_code"]
+    # Yeni şifrə təyin et
+    client.post("/sifre-sifirla", data={
+        "code": code, "password": "yeniparol", "confirm": "yeniparol",
+    }, follow_redirects=True)
+    # Köhnə şifrə ilə giriş alınmamalı, yeni ilə alınmalı
+    r = login(client, "+994500000020", "yeniparol")
+    assert client.get("/profil").status_code == 200
+
+
+# ─── Hesab ayarları ───────────────────────────────────────────
+
+def test_account_password_change(client):
+    register(client, "AccUser", "+994500000021", password="kohneparol")
+    client.post("/hesab-ayarlari", data={
+        "action": "password", "current": "kohneparol",
+        "password": "tezeparol", "confirm": "tezeparol",
+    }, follow_redirects=True)
+    logout(client)
+    login(client, "+994500000021", "tezeparol")
+    assert client.get("/profil").status_code == 200
+
+
+def test_account_name_change(client):
+    register(client, "OldName", "+994500000022")
+    client.post("/hesab-ayarlari", data={"action": "name", "username": "YeniAd"},
+                follow_redirects=True)
+    u = database.get_user_by_phone("+994500000022")
+    assert u["username"] == "YeniAd"
+
+
+# ─── Kod redaktoru .py bloku ──────────────────────────────────
+
+def test_editor_blocks_py_write(client):
+    from config import ADMIN_PHONE, ADMIN_PASSWORD
+    # Admin tam giriş (2FA daxil)
+    client.post("/giris", data={"phone": ADMIN_PHONE, "password": ADMIN_PASSWORD})
+    client.get("/2fa-qur")
+    with client.session_transaction() as s:
+        secret = s["totp_setup_secret"]
+    import pyotp
+    client.post("/2fa-qur", data={"code": pyotp.TOTP(secret).now()}, follow_redirects=True)
+    # .py yazmağa cəhd → 403 (bloklanır)
+    r = client.post("/admin/fayl-yaz", json={"path": "app.py", "content": "x=1"})
+    assert r.status_code == 403
+    # İcazəli tip (.txt) — müvəqqəti fayl, sonra silinir (real faylları korlamamaq üçün)
+    import os
+    from config import BASE_DIR
+    tmp_rel = "static/_test_write.txt"
+    r2 = client.post("/admin/fayl-yaz", json={"path": tmp_rel, "content": "salam"})
+    assert r2.status_code == 200
+    os.remove(os.path.join(BASE_DIR, tmp_rel))
