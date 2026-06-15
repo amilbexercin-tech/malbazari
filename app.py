@@ -171,16 +171,38 @@ def listing_to_dict(row):
 # Vaxtı keçmiş elanların silinməsi ƏVVƏL hər sorğuda işləyirdi (yavaşladırdı).
 # İndi ən çox MAINTENANCE_INTERVAL saniyədə bir dəfə işləyir.
 
-MAINTENANCE_INTERVAL = 600  # 10 dəqiqə
+MAINTENANCE_INTERVAL = 600     # 10 dəqiqə (köhnə elanların təmizlənməsi)
+BACKUP_INTERVAL = 86400        # 24 saat (avtomatik yedək)
+AUTO_BACKUP = os.environ.get('AUTO_BACKUP', '1').lower() in ('1', 'true', 'yes')
 _maintenance_lock = threading.Lock()
 _last_maintenance = 0.0
+_last_backup = 0.0
+_backup_lock = threading.Lock()
+
+
+def _safe_backup():
+    """Yedəyi arxa planda yaradır — sorğunu bloklamır, xəta saytı çökdürmür."""
+    try:
+        import backup
+        backup.make_backup()
+    except Exception as e:
+        app.logger.error("Avtomatik yedək xətası: %s", e)
+    finally:
+        _backup_lock.release()
 
 
 def run_maintenance():
-    """Vaxtı keçmiş elanları sil.
+    """Vaxtı keçmiş elanları sil + sutkada bir avtomatik yedək.
     İnterval keçməyibsə və ya başqa sorğu eyni anda işlədirsə — heç nə etmir."""
-    global _last_maintenance
+    global _last_maintenance, _last_backup
     now = time.monotonic()
+
+    # Gündəlik yedək (arxa planda, ayrıca interval)
+    if AUTO_BACKUP and now - _last_backup >= BACKUP_INTERVAL:
+        if _backup_lock.acquire(blocking=False):
+            _last_backup = now
+            threading.Thread(target=_safe_backup, daemon=True).start()
+
     if now - _last_maintenance < MAINTENANCE_INTERVAL:
         return
     if not _maintenance_lock.acquire(blocking=False):

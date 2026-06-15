@@ -18,13 +18,14 @@ import sqlite3
 import zipfile
 import tempfile
 from datetime import datetime
-from config import DATABASE_PATH, UPLOAD_FOLDER, BASE_DIR
+from config import DATABASE_PATH, UPLOAD_FOLDER, DATA_DIR
 
 KEEP = 14  # neçə son yedək saxlanılsın
 
 
 def make_backup():
-    backups_dir = os.path.join(BASE_DIR, 'backups')
+    # Yedəklər kalıcı diskdə saxlanılır (Railway: /data/backups)
+    backups_dir = os.path.join(DATA_DIR, 'backups')
     os.makedirs(backups_dir, exist_ok=True)
     ts = datetime.now().strftime('%Y%m%d-%H%M%S')
     zip_path = os.path.join(backups_dir, f'malbazari-backup-{ts}.zip')
