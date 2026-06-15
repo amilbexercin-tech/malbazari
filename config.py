@@ -76,6 +76,23 @@ REGIONS = [
 FREE_DAYS = 30
 MAX_IMAGES = 5
 
+# Heyvana xas seçimlər
+PURPOSES = ['Südlük', 'Ətlik', 'Damazlıq', 'Yumurtalıq', 'Digər']
+
+# Sıralama variantları (açar: göstərilən ad)
+SORT_OPTIONS = {
+    'new': 'Ən yeni',
+    'old': 'Ən köhnə',
+    'price_asc': 'Qiymət: ucuzdan bahaya',
+    'price_desc': 'Qiymət: bahadan ucuza',
+}
+
+# OTP / SMS
+OTP_TTL_SECONDS = 300          # kodun etibarlılıq müddəti (5 dəqiqə)
+SMS_PROVIDER = os.environ.get('SMS_PROVIDER', 'dev')  # 'dev' = kod ekranda göstərilir
+SMS_API_KEY = os.environ.get('SMS_API_KEY', '')
+SMS_SENDER = os.environ.get('SMS_SENDER', 'MalBazari')
+
 SUBCATEGORY_EXAMPLES = {
     # Mal-Qara
     'İnək':      'Nümunə: 2 yaşlı inək, 150 kq, peyvəndli, südlük',

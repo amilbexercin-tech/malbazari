@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Telefon təsdiqi — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-bg"></div>
+  <div class="auth-card">
+    <div class="auth-logo">📱</div>
+    <h1>Telefon Təsdiqi</h1>
+    <p class="auth-sub"><strong>{{ phone }}</strong> nömrəsinə göndərilən 6 rəqəmli kodu daxil edin</p>
+
+    {% if dev_code %}
+    <div class="flash flash-info" style="margin:0 0 16px">
+      <span>🔧 Test rejimi — kodunuz: <strong style="letter-spacing:3px">{{ dev_code }}</strong></span>
+    </div>
+    {% endif %}
+
+    <form method="post" class="auth-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label><i class="fas fa-shield-alt"></i> Təsdiq kodu</label>
+        <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
+               placeholder="••••••" required autofocus
+               style="text-align:center;font-size:24px;letter-spacing:8px">
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">
+        <i class="fas fa-check"></i> Təsdiqlə
+      </button>
+    </form>
+
+    <form method="post" action="{{ url_for('resend_otp') }}" style="margin-top:14px;text-align:center">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn-link" style="background:none;border:none;color:var(--primary);font-weight:600;cursor:pointer">
+        <i class="fas fa-redo"></i> Kodu yenidən göndər
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

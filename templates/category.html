@@ -20,36 +20,95 @@
     <aside class="sidebar">
       <div class="filter-box">
         <h3><i class="fas fa-filter"></i> Filtr</h3>
-        <form method="get" id="filterForm">
-          <div class="filter-group">
-            <label>Alt kateqoriya</label>
-            <div class="subcats">
-              <a href="{{ url_for('category', slug=slug) }}?region={{ region }}"
-                 class="subcat-btn {% if not sub %}active{% endif %}">Hamısı</a>
-              {% for s in cat.subcategories %}
-              <a href="{{ url_for('category', slug=slug) }}?sub={{ s }}&region={{ region }}"
-                 class="subcat-btn {% if sub == s %}active{% endif %}">{{ s }}</a>
-              {% endfor %}
-            </div>
+
+        <div class="filter-group">
+          <label>Alt kateqoriya</label>
+          <div class="subcats">
+            <a href="{{ url_for('category', slug=slug) }}?region={{ region }}"
+               class="subcat-btn {% if not sub %}active{% endif %}">Hamısı</a>
+            {% for s in cat.subcategories %}
+            <a href="{{ url_for('category', slug=slug) }}?sub={{ s }}&region={{ region }}"
+               class="subcat-btn {% if sub == s %}active{% endif %}">{{ s }}</a>
+            {% endfor %}
           </div>
+        </div>
+
+        <form method="get" id="filterForm">
+          {% if sub %}<input type="hidden" name="sub" value="{{ sub }}">{% endif %}
+          <input type="hidden" name="sort" value="{{ sort }}">
+
           <div class="filter-group">
-            <label for="regionSelect">Rayon</label>
-            <select name="region" id="regionSelect" onchange="applyFilter()">
+            <label>Rayon</label>
+            <select name="region">
               <option value="">Bütün rayonlar</option>
               {% for r in regions %}
               <option value="{{ r }}" {% if region == r %}selected{% endif %}>{{ r }}</option>
               {% endfor %}
             </select>
           </div>
-          {% if sub %}
-          <input type="hidden" name="sub" value="{{ sub }}">
-          {% endif %}
+
+          <div class="filter-group">
+            <label>Qiymət (AZN)</label>
+            <div class="range-row">
+              <input type="number" name="price_min" placeholder="min" min="0" value="{{ f.get('price_min','') }}">
+              <span>–</span>
+              <input type="number" name="price_max" placeholder="max" min="0" value="{{ f.get('price_max','') }}">
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label>Çəki (kq)</label>
+            <div class="range-row">
+              <input type="number" name="weight_min" placeholder="min" min="0" value="{{ f.get('weight_min','') }}">
+              <span>–</span>
+              <input type="number" name="weight_max" placeholder="max" min="0" value="{{ f.get('weight_max','') }}">
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label>Məqsəd</label>
+            <select name="purpose">
+              <option value="">Hamısı</option>
+              {% for p in purposes %}
+              <option value="{{ p }}" {% if f.get('purpose') == p %}selected{% endif %}>{{ p }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Peyvənd</label>
+            <select name="vaccinated">
+              <option value="">Fərq etməz</option>
+              <option value="1" {% if f.get('vaccinated') == '1' %}selected{% endif %}>Peyvəndli</option>
+              <option value="0" {% if f.get('vaccinated') == '0' %}selected{% endif %}>Peyvəndsiz</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Cins</label>
+            <input type="text" name="breed" placeholder="Məs: Holşteyn" value="{{ f.get('breed','') }}">
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full"><i class="fas fa-filter"></i> Filtrlə</button>
+          <a href="{{ url_for('category', slug=slug) }}" class="btn btn-outline btn-full mt-2">Sıfırla</a>
         </form>
       </div>
     </aside>
 
     <!-- MAIN -->
     <main class="main-content">
+      <div class="results-bar">
+        <span class="results-count">{{ total }} elan</span>
+        <form method="get" class="sort-form">
+          {% for k, v in request.args.items() %}{% if k not in ['sort','page'] %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
+          <label>Sırala:</label>
+          <select name="sort" onchange="this.form.submit()">
+            {% for key, label in sort_options.items() %}
+            <option value="{{ key }}" {% if sort == key %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
       <!-- Regular -->
       {% if listings %}
       <div class="listings-grid">
@@ -57,21 +116,22 @@
       </div>
       <!-- Pagination -->
       {% if pages > 1 %}
+      {% set base_qs %}{% for k, v in request.args.items() %}{% if k != 'page' %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}{% endset %}
       <div class="pagination">
         {% if page > 1 %}
-        <a href="?sub={{ sub }}&region={{ region }}&page={{ page-1 }}" class="page-btn">‹ Əvvəlki</a>
+        <a href="?{{ base_qs }}page={{ page-1 }}" class="page-btn">‹ Əvvəlki</a>
         {% endif %}
         {% for p in range(1, pages+1) %}
           {% if p == page %}
           <span class="page-btn active">{{ p }}</span>
           {% elif p == 1 or p == pages or (p >= page-2 and p <= page+2) %}
-          <a href="?sub={{ sub }}&region={{ region }}&page={{ p }}" class="page-btn">{{ p }}</a>
+          <a href="?{{ base_qs }}page={{ p }}" class="page-btn">{{ p }}</a>
           {% elif p == page-3 or p == page+3 %}
           <span class="page-btn">...</span>
           {% endif %}
         {% endfor %}
         {% if page < pages %}
-        <a href="?sub={{ sub }}&region={{ region }}&page={{ page+1 }}" class="page-btn">Sonrakı ›</a>
+        <a href="?{{ base_qs }}page={{ page+1 }}" class="page-btn">Sonrakı ›</a>
         {% endif %}
       </div>
       {% endif %}

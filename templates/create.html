@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}Elan Əlavə Et — {{ site_name }}{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+
 {% block content %}
 <div class="container page-content">
   <div class="form-page">
@@ -59,12 +63,49 @@
             <span class="form-hint">Boş qoyursanız "Razılaşma ilə" yazılır</span>
           </div>
           <div class="form-group">
-            <label>Çəki / Ölçü</label>
-            <input type="text" name="weight" placeholder="Məs: 350 kq, 5 litr">
+            <label>Ölçü / həcm</label>
+            <input type="text" name="weight" placeholder="Məs: 5 litr, orta">
+          </div>
+          <div class="form-group">
+            <label>Çəki (kq)</label>
+            <input type="number" name="weight_kg" placeholder="Məs: 350" min="0" step="0.1">
+            <span class="form-hint">Filtrlər üçün — rəqəmlə</span>
           </div>
           <div class="form-group">
             <label>Say (ədəd)</label>
             <input type="number" name="quantity" value="1" min="1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Animal details -->
+      <div class="form-section">
+        <h2 class="form-section-title">🐄 Heyvan Məlumatları</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Məqsəd</label>
+            <select name="purpose">
+              <option value="">Seçin...</option>
+              {% for p in purposes %}
+              <option value="{{ p }}">{{ p }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Cins</label>
+            <input type="text" name="breed" placeholder="Məs: Holşteyn, Savalan" maxlength="100">
+          </div>
+          <div class="form-group">
+            <label>Yaş</label>
+            <input type="text" name="age" placeholder="Məs: 2 yaş, 6 aylıq" maxlength="50">
+          </div>
+          <div class="form-group">
+            <label>Peyvənd</label>
+            <select name="vaccinated">
+              <option value="">Bilinmir</option>
+              <option value="1">Bəli, peyvəndlidir</option>
+              <option value="0">Xeyr</option>
+            </select>
           </div>
         </div>
       </div>
@@ -88,6 +129,18 @@
                    value="{{ current_user.phone if current_user else '' }}">
           </div>
         </div>
+      </div>
+
+      <!-- Map location -->
+      <div class="form-section">
+        <h2 class="form-section-title">🗺️ Xəritədə yer <span style="font-weight:400;font-size:14px;color:var(--text-muted)">(istəyə bağlı)</span></h2>
+        <p class="form-hint" style="margin-bottom:10px">Dəqiq yeri göstərmək üçün xəritədə klikləyin.</p>
+        <div id="pickMap" class="pick-map"></div>
+        <input type="hidden" name="lat" id="latInput">
+        <input type="hidden" name="lng" id="lngInput">
+        <button type="button" class="btn btn-outline btn-sm" id="clearPin" style="margin-top:8px;display:none">
+          <i class="fas fa-times"></i> Yeri sil
+        </button>
       </div>
 
       <!-- Images -->
@@ -178,5 +231,42 @@ area.addEventListener('drop',e=>{
 document.querySelector('[name=description]').addEventListener('input',function(){
   document.getElementById('descCount').textContent = this.value.length+'/2000';
 });
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// Xəritə yer seçici (Leaflet + OpenStreetMap, API açarı tələb etmir)
+(function(){
+  const mapEl = document.getElementById('pickMap');
+  if(!mapEl || typeof L === 'undefined') return;
+  const latIn = document.getElementById('latInput');
+  const lngIn = document.getElementById('lngInput');
+  const clearBtn = document.getElementById('clearPin');
+  const startLat = parseFloat(latIn.value) || 40.4093;  // Azərbaycan mərkəzi
+  const startLng = parseFloat(lngIn.value) || 49.8671;
+  const hasPin = !!latIn.value;
+
+  const map = L.map('pickMap').setView([startLat, startLng], hasPin ? 12 : 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {maxZoom:18, attribution:'© OpenStreetMap'}).addTo(map);
+
+  let marker = null;
+  function setPin(lat, lng){
+    if(marker) marker.setLatLng([lat,lng]);
+    else marker = L.marker([lat,lng]).addTo(map);
+    latIn.value = lat.toFixed(6);
+    lngIn.value = lng.toFixed(6);
+    clearBtn.style.display = 'inline-flex';
+  }
+  if(hasPin) setPin(startLat, startLng);
+  map.on('click', e => setPin(e.latlng.lat, e.latlng.lng));
+  clearBtn.addEventListener('click', () => {
+    if(marker){ map.removeLayer(marker); marker=null; }
+    latIn.value=''; lngIn.value=''; clearBtn.style.display='none';
+  });
+  setTimeout(()=>map.invalidateSize(), 200);
+})();
 </script>
 {% endblock %}

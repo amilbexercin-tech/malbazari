@@ -2,6 +2,12 @@
 {% block title %}{{ listing.title }} — {{ site_name }}{% endblock %}
 {% block desc %}{{ listing.description | truncate(150) }}{% endblock %}
 
+{% block extra_css %}
+{% if listing.lat and listing.lng %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endif %}
+{% endblock %}
+
 {% block content %}
 <div class="container page-content">
   <nav class="breadcrumb">
@@ -47,6 +53,14 @@
         <p>{{ listing.description or 'Açıqlama yoxdur.' }}</p>
       </div>
 
+      {% if listing.lat and listing.lng %}
+      <div class="listing-desc-box">
+        <h2><i class="fas fa-map-marker-alt"></i> Xəritədə yer</h2>
+        <div id="listingMap" class="view-map"
+             data-lat="{{ listing.lat }}" data-lng="{{ listing.lng }}"></div>
+      </div>
+      {% endif %}
+
       <!-- Owner Actions -->
       {% if current_user and current_user.id == listing.user_id %}
       <div class="owner-actions">
@@ -88,6 +102,23 @@
           {% endif %}
           {% if listing.quantity %}
           <span class="tag"><i class="fas fa-hashtag"></i> {{ listing.quantity }} ədəd</span>
+          {% endif %}
+          {% if listing.weight_kg %}
+          <span class="tag"><i class="fas fa-weight-scale"></i> {{ "%.0f"|format(listing.weight_kg) }} kq</span>
+          {% endif %}
+          {% if listing.purpose %}
+          <span class="tag"><i class="fas fa-bullseye"></i> {{ listing.purpose }}</span>
+          {% endif %}
+          {% if listing.breed %}
+          <span class="tag"><i class="fas fa-dna"></i> {{ listing.breed }}</span>
+          {% endif %}
+          {% if listing.age %}
+          <span class="tag"><i class="fas fa-birthday-cake"></i> {{ listing.age }}</span>
+          {% endif %}
+          {% if listing.vaccinated == 1 %}
+          <span class="tag" style="color:#2d6a4f"><i class="fas fa-syringe"></i> Peyvəndli</span>
+          {% elif listing.vaccinated == 0 %}
+          <span class="tag"><i class="fas fa-syringe"></i> Peyvəndsiz</span>
           {% endif %}
         </div>
         <div class="info-meta">
@@ -176,4 +207,22 @@ function setMainImg(thumb, src){
   thumb.classList.add('active');
 }
 </script>
+{% endblock %}
+
+{% block extra_js %}
+{% if listing.lat and listing.lng %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function(){
+  const el = document.getElementById('listingMap');
+  if(!el || typeof L === 'undefined') return;
+  const lat = parseFloat(el.dataset.lat), lng = parseFloat(el.dataset.lng);
+  const map = L.map('listingMap').setView([lat,lng], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {maxZoom:18, attribution:'© OpenStreetMap'}).addTo(map);
+  L.marker([lat,lng]).addTo(map);
+  setTimeout(()=>map.invalidateSize(), 200);
+})();
+</script>
+{% endif %}
 {% endblock %}

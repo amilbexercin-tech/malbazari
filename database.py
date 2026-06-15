@@ -21,6 +21,7 @@ def init_db():
         phone TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
         is_admin INTEGER DEFAULT 0,
+        phone_verified INTEGER DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now'))
     )''')
 
@@ -34,9 +35,16 @@ def init_db():
         price REAL,
         unit TEXT DEFAULT 'AZN',
         weight TEXT,
+        weight_kg REAL,
         quantity INTEGER DEFAULT 1,
         region TEXT,
         phone TEXT,
+        purpose TEXT,
+        breed TEXT,
+        age TEXT,
+        vaccinated INTEGER,
+        lat REAL,
+        lng REAL,
         images TEXT DEFAULT '[]',
         status TEXT DEFAULT 'active',
         is_vip INTEGER DEFAULT 0,
@@ -104,6 +112,25 @@ def init_db():
         created_at TEXT DEFAULT (datetime('now'))
     )''')
 
+    # ── Mövcud bazalar üçün miqrasiya: çatışmayan sütunları əlavə et ──
+    migrations = [
+        ("users", "phone_verified", "INTEGER DEFAULT 0"),
+        ("listings", "weight_kg", "REAL"),
+        ("listings", "purpose", "TEXT"),
+        ("listings", "breed", "TEXT"),
+        ("listings", "age", "TEXT"),
+        ("listings", "vaccinated", "INTEGER"),
+        ("listings", "lat", "REAL"),
+        ("listings", "lng", "REAL"),
+    ]
+    for table, col, coltype in migrations:
+        cols = [r[1] for r in c.execute(f"PRAGMA table_info({table})").fetchall()]
+        if col not in cols:
+            c.execute(f"ALTER TABLE {table} ADD COLUMN {col} {coltype}")
+            # Mövcud istifadəçiləri təsdiqlənmiş say (yalnız bu sütun ilk dəfə əlavə olunanda)
+            if table == "users" and col == "phone_verified":
+                c.execute("UPDATE users SET phone_verified=1")
+
     defaults = [
         ('site_name', 'MalBazari.biz'),
         ('card_number', ''),
@@ -117,8 +144,8 @@ def init_db():
 
     from werkzeug.security import generate_password_hash
     admin_hash = generate_password_hash(ADMIN_PASSWORD)
-    c.execute("""INSERT OR IGNORE INTO users(username,phone,password_hash,is_admin)
-                 VALUES(?,?,?,?)""", ('Admin', ADMIN_PHONE, admin_hash, 1))
+    c.execute("""INSERT OR IGNORE INTO users(username,phone,password_hash,is_admin,phone_verified)
+                 VALUES(?,?,?,?,?)""", ('Admin', ADMIN_PHONE, admin_hash, 1, 1))
 
     conn.commit()
     conn.close()
@@ -129,11 +156,14 @@ def create_listing(data):
     conn = get_db()
     expires = (datetime.now() + timedelta(days=FREE_DAYS)).strftime('%Y-%m-%d %H:%M:%S')
     conn.execute("""INSERT INTO listings
-        (user_id,category,subcategory,title,description,price,weight,quantity,region,phone,images,expires_at)
-        VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
+        (user_id,category,subcategory,title,description,price,weight,weight_kg,quantity,
+         region,phone,purpose,breed,age,vaccinated,lat,lng,images,expires_at)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (data['user_id'], data['category'], data['subcategory'], data['title'],
          data.get('description',''), data.get('price'), data.get('weight',''),
-         data.get('quantity',1), data.get('region',''), data.get('phone',''),
+         data.get('weight_kg'), data.get('quantity',1), data.get('region',''),
+         data.get('phone',''), data.get('purpose'), data.get('breed'), data.get('age'),
+         data.get('vaccinated'), data.get('lat'), data.get('lng'),
          data.get('images','[]'), expires))
     lid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
     conn.commit(); conn.close()
@@ -148,10 +178,13 @@ def get_listing(lid):
 def update_listing(lid, data):
     conn = get_db()
     conn.execute("""UPDATE listings SET category=?,subcategory=?,title=?,description=?,
-        price=?,weight=?,quantity=?,region=?,phone=?,images=? WHERE id=?""",
+        price=?,weight=?,weight_kg=?,quantity=?,region=?,phone=?,
+        purpose=?,breed=?,age=?,vaccinated=?,lat=?,lng=?,images=? WHERE id=?""",
         (data['category'], data['subcategory'], data['title'], data.get('description',''),
-         data.get('price'), data.get('weight',''), data.get('quantity',1),
-         data.get('region',''), data.get('phone',''), data.get('images','[]'), lid))
+         data.get('price'), data.get('weight',''), data.get('weight_kg'),
+         data.get('quantity',1), data.get('region',''), data.get('phone',''),
+         data.get('purpose'), data.get('breed'), data.get('age'), data.get('vaccinated'),
+         data.get('lat'), data.get('lng'), data.get('images','[]'), lid))
     conn.commit(); conn.close()
 
 def delete_listing(lid):
@@ -182,8 +215,17 @@ def increment_views(lid):
     conn.execute("UPDATE listings SET views=views+1 WHERE id=?", (lid,))
     conn.commit(); conn.close()
 
+SORT_SQL = {
+    'new': 'l.created_at DESC',
+    'old': 'l.created_at ASC',
+    'price_asc': 'l.price IS NULL, l.price ASC',
+    'price_desc': 'l.price IS NULL, l.price DESC',
+}
+
 def get_listings(category=None, subcategory=None, region=None, search=None,
-                 page=1, per_page=20, user_id=None):
+                 page=1, per_page=20, user_id=None,
+                 price_min=None, price_max=None, weight_min=None, weight_max=None,
+                 purpose=None, vaccinated=None, breed=None, sort='new'):
     conn = get_db()
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     # All conditions use ? placeholders — no string interpolation of user data
@@ -199,17 +241,31 @@ def get_listings(category=None, subcategory=None, region=None, search=None,
     if user_id:
         conds.append("l.user_id=?"); params.append(user_id)
     if search:
-        conds.append("(l.title LIKE ? OR l.description LIKE ?)")
-        params += [f'%{search}%', f'%{search}%']
+        conds.append("(l.title LIKE ? OR l.description LIKE ? OR l.breed LIKE ?)")
+        params += [f'%{search}%', f'%{search}%', f'%{search}%']
+    if price_min is not None:
+        conds.append("l.price >= ?"); params.append(price_min)
+    if price_max is not None:
+        conds.append("l.price <= ?"); params.append(price_max)
+    if weight_min is not None:
+        conds.append("l.weight_kg >= ?"); params.append(weight_min)
+    if weight_max is not None:
+        conds.append("l.weight_kg <= ?"); params.append(weight_max)
+    if purpose:
+        conds.append("l.purpose = ?"); params.append(purpose)
+    if vaccinated is not None:
+        conds.append("l.vaccinated = ?"); params.append(vaccinated)
+    if breed:
+        conds.append("l.breed LIKE ?"); params.append(f'%{breed}%')
 
     where = " AND ".join(conds)
     offset = (page - 1) * per_page
+    order_by = SORT_SQL.get(sort, SORT_SQL['new'])
 
     total = conn.execute(f"SELECT COUNT(*) FROM listings l WHERE {where}", params).fetchone()[0]
-    # Ən yenidən köhnəyə
     rows = conn.execute(f"""SELECT l.*,u.username FROM listings l
         LEFT JOIN users u ON l.user_id=u.id WHERE {where}
-        ORDER BY l.created_at DESC
+        ORDER BY {order_by}
         LIMIT ? OFFSET ?""", params + [per_page, offset]).fetchall()
     conn.close()
     return rows, total
@@ -292,6 +348,11 @@ def get_all_users(page=1, per_page=30):
 def delete_user(uid):
     conn = get_db()
     conn.execute("DELETE FROM users WHERE id=?", (uid,))
+    conn.commit(); conn.close()
+
+def set_phone_verified(uid):
+    conn = get_db()
+    conn.execute("UPDATE users SET phone_verified=1 WHERE id=?", (uid,))
     conn.commit(); conn.close()
 
 # ─── Settings ────────────────────────────────────────────────────────────────

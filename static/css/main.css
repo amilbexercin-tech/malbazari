@@ -776,3 +776,20 @@ input,select,textarea{font-family:inherit}
 @media(max-width:900px){
   .navbar-actions .lang-switch{display:none}
 }
+
+/* ── Filtrlər, sıralama, xəritə ── */
+.range-row{display:flex;align-items:center;gap:6px}
+.range-row input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);outline:none}
+.range-row span{color:var(--text-light)}
+.filter-group .btn-full{margin-top:4px}
+.mt-2{margin-top:8px}
+
+.results-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap}
+.results-count{font-weight:600;color:var(--text-muted)}
+.sort-form{display:flex;align-items:center;gap:8px}
+.sort-form label{font-size:13px;color:var(--text-muted)}
+.sort-form select{padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);outline:none;background:var(--surface)}
+
+.pick-map{height:300px;border-radius:var(--radius);border:1px solid var(--border);z-index:1}
+.view-map{height:280px;border-radius:var(--radius);border:1px solid var(--border);z-index:1}
+.search-filters .filter-row{flex-wrap:wrap;gap:8px}

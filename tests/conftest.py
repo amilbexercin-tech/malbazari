@@ -10,15 +10,22 @@ def client(tmp_path):
     database.DATABASE_PATH = str(tmp_path / "test.db")
     database.init_db()
     app_module.app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
+    app_module.limiter.enabled = False   # testlərdə rate limit söndürülür
     with app_module.app.test_client() as c:
         yield c
 
 
-def register(client, username, phone, password="parol123"):
-    return client.post("/qeydiyyat", data={
+def register(client, username, phone, password="parol123", verify=True):
+    r = client.post("/qeydiyyat", data={
         "username": username, "phone": phone,
         "password": password, "confirm": password,
     }, follow_redirects=True)
+    # Testlərdə telefon təsdiqini avtomatik keç (OTP SMS olmadan)
+    if verify:
+        u = database.get_user_by_phone(phone)
+        if u:
+            database.set_phone_verified(u["id"])
+    return r
 
 
 def login(client, phone, password="parol123"):

@@ -132,3 +132,67 @@ def test_report_listing(client):
     reports, total = database.get_reports()
     assert total == 1
     assert reports[0]["reason"] == "Saxta məlumat"
+
+
+# ─── Filtrlər & sıralama ──────────────────────────────────────
+
+def _post_listing(client, phone, title, price):
+    return client.post("/elan-yarat", data={
+        "category": "mal-qara", "subcategory": "İnək", "title": title,
+        "price": price, "region": "Bakı", "phone": phone, "quantity": "1",
+    }, follow_redirects=True)
+
+
+def test_price_filter(client):
+    register(client, "PF", "+994500000010")
+    _post_listing(client, "+994500000010", "Ucuz", 100)
+    _post_listing(client, "+994500000010", "Orta", 500)
+    _post_listing(client, "+994500000010", "Baha", 1000)
+    rows, total = database.get_listings(price_min=300, price_max=800)
+    assert total == 1 and rows[0]["title"] == "Orta"
+
+
+def test_sort_price_asc(client):
+    register(client, "SP", "+994500000011")
+    _post_listing(client, "+994500000011", "B", 900)
+    _post_listing(client, "+994500000011", "A", 200)
+    rows, _ = database.get_listings(sort="price_asc")
+    prices = [r["price"] for r in rows]
+    assert prices == sorted(prices)
+
+
+def test_animal_filters(client):
+    register(client, "AF", "+994500000012")
+    client.post("/elan-yarat", data={
+        "category": "mal-qara", "subcategory": "İnək", "title": "Südlük inək",
+        "region": "Bakı", "phone": "+994500000012", "quantity": "1",
+        "purpose": "Südlük", "breed": "Holşteyn", "vaccinated": "1", "weight_kg": "350",
+    }, follow_redirects=True)
+    assert database.get_listings(purpose="Südlük")[1] == 1
+    assert database.get_listings(vaccinated=1)[1] == 1
+    assert database.get_listings(weight_min=300, weight_max=400)[1] == 1
+    assert database.get_listings(breed="holş")[1] == 1
+
+
+# ─── OTP telefon təsdiqi ──────────────────────────────────────
+
+def test_otp_verification_flow(client):
+    register(client, "OtpUser", "+994500000013", verify=False)
+    # Təsdiqlənməmiş istifadəçi elan yarada bilmir → təsdiq səhifəsinə yönəlir
+    r = client.get("/elan-yarat")
+    assert r.status_code == 302
+    assert "/telefon-tesdiq" in r.headers["Location"]
+    # Sessiyadakı OTP kodu ilə təsdiqlə
+    with client.session_transaction() as s:
+        code = s["otp_code"]
+    client.post("/telefon-tesdiq", data={"code": code}, follow_redirects=True)
+    u = database.get_user_by_phone("+994500000013")
+    assert u["phone_verified"] == 1
+
+
+def test_otp_wrong_code(client):
+    register(client, "WrongOtp", "+994500000014", verify=False)
+    client.post("/telefon-tesdiq", data={"code": "000000"}, follow_redirects=True)
+    u = database.get_user_by_phone("+994500000014")
+    # Yanlış kod (təsadüf üstündə deyil) → təsdiqlənməmiş qalır
+    assert u["phone_verified"] == 0

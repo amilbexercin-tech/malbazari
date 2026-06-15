@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import random
 import secrets
 import threading
 from datetime import datetime, timedelta
@@ -10,20 +11,36 @@ from flask import (Flask, render_template, request, redirect, url_for,
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from PIL import Image
 import database as db
 import i18n
+import sms
 from config import (SECRET_KEY, UPLOAD_FOLDER, MAX_CONTENT_LENGTH,
                     CATEGORIES, REGIONS, BASE_DIR, MAX_IMAGES,
-                    SUBCATEGORY_EXAMPLES, DEBUG)
+                    SUBCATEGORY_EXAMPLES, DEBUG, PURPOSES, SORT_OPTIONS,
+                    OTP_TTL_SECONDS, SMS_PROVIDER)
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    # Production-da HTTPS arxasında SESSION_COOKIE_SECURE=1 təyin et.
+    # Lokal HTTP üçün defolt False (yoxsa sessiya kukisi göndərilmir).
+    SESSION_COOKIE_SECURE=os.environ.get('SESSION_COOKIE_SECURE', '').lower() in ('1', 'true', 'yes'),
+)
 
 # CSRF qoruması — bütün POST formaları və AJAX sorğuları üçün token tələb olunur
 csrf = CSRFProtect(app)
+
+# Rate limiting — spam və brute-force qoruması
+limiter = Limiter(get_remote_address, app=app,
+                  default_limits=["600 per hour"],
+                  storage_uri="memory://")
 
 ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
@@ -58,6 +75,32 @@ def admin_required(f):
             return redirect(url_for('index'))
         return f(*args, **kwargs)
     return decorated
+
+def verified_required(f):
+    """Telefonu təsdiqlənməmiş istifadəçini təsdiq səhifəsinə yönəldir."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Zəhmət olmasa giriş edin.', 'warning')
+            return redirect(url_for('login', next=request.url))
+        user = db.get_user_by_id(session['user_id'])
+        if not user or not user['phone_verified']:
+            flash('Davam etmək üçün telefon nömrənizi təsdiqləyin.', 'warning')
+            return redirect(url_for('verify_phone'))
+        return f(*args, **kwargs)
+    return decorated
+
+# ─── OTP köməkçiləri ───────────────────────────────────────────────────────────
+
+def _start_otp(phone):
+    """Yeni OTP yaradır, sessiyada saxlayır və SMS göndərir.
+    dev rejimində kodu qaytarır ki, interfeysdə göstərilsin."""
+    code = f"{random.randint(0, 999999):06d}"
+    session['otp_code'] = code
+    session['otp_phone'] = phone
+    session['otp_expires'] = time.time() + OTP_TTL_SECONDS
+    sms.send_otp(phone, code)
+    return code
 
 # PIL formatından etibarlı uzantıya xəritə — uzantı istifadəçinin adından deyil,
 # faylın əsl məzmunundan götürülür.
@@ -143,6 +186,8 @@ def inject_globals():
     return {
         'categories': CATEGORIES,
         'regions': REGIONS,
+        'purposes': PURPOSES,
+        'sort_options': SORT_OPTIONS,
         'subcategory_examples': SUBCATEGORY_EXAMPLES,
         'site_name': db.get_setting('site_name', 'MalBazari.biz'),
         'current_user': db.get_user_by_id(session['user_id']) if 'user_id' in session else None,
@@ -168,6 +213,30 @@ def set_language(lang):
 
 # ─── Public Routes ───────────────────────────────────────────────────────────
 
+def _parse_filters():
+    """Axtarış/kateqoriya filtrlərini request.args-dan oxu."""
+    def argnum(name):
+        v = (request.args.get(name) or '').strip()
+        try:
+            return float(v) if v != '' else None
+        except ValueError:
+            return None
+    vacc = request.args.get('vaccinated', '')
+    sort = request.args.get('sort', 'new')
+    if sort not in SORT_OPTIONS:
+        sort = 'new'
+    purpose = (request.args.get('purpose') or '').strip()
+    return {
+        'price_min': argnum('price_min'),
+        'price_max': argnum('price_max'),
+        'weight_min': argnum('weight_min'),
+        'weight_max': argnum('weight_max'),
+        'purpose': purpose if purpose in PURPOSES else None,
+        'vaccinated': 1 if vacc == '1' else (0 if vacc == '0' else None),
+        'breed': (request.args.get('breed') or '').strip() or None,
+        'sort': sort,
+    }
+
 @app.route('/')
 def index():
     recent_rows, _ = db.get_listings(page=1, per_page=12)
@@ -189,16 +258,18 @@ def category(slug):
     sub = request.args.get('sub', '')
     region = request.args.get('region', '')
     page = int(request.args.get('page', 1))
+    filters = _parse_filters()
 
     rows, total = db.get_listings(category=slug,
                                   subcategory=sub if sub else None,
                                   region=region if region else None,
-                                  page=page, per_page=20)
+                                  page=page, per_page=20, **filters)
     listings = [listing_to_dict(l) for l in rows]
     pages = (total + 19) // 20
     return render_template('category.html', cat=cat, slug=slug,
                            listings=listings, total=total,
-                           page=page, pages=pages, sub=sub, region=region)
+                           page=page, pages=pages, sub=sub, region=region,
+                           f=request.args, sort=filters['sort'])
 
 @app.route('/elan/<int:lid>')
 def listing_detail(lid):
@@ -225,18 +296,21 @@ def search():
     if not q:
         return redirect(url_for('index'))
 
+    filters = _parse_filters()
     rows, total = db.get_listings(
         category=category if category else None,
         region=region if region else None,
-        search=q, page=page, per_page=20)
+        search=q, page=page, per_page=20, **filters)
     listings = [listing_to_dict(l) for l in rows]
     pages = (total + 19) // 20
     return render_template('search.html', listings=listings, total=total,
-                           q=q, page=page, pages=pages, region=region, cat=category)
+                           q=q, page=page, pages=pages, region=region, cat=category,
+                           f=request.args, sort=filters['sort'])
 
 # ─── Auth Routes ─────────────────────────────────────────────────────────────
 
 @app.route('/qeydiyyat', methods=['GET', 'POST'])
+@limiter.limit("5 per hour", methods=['POST'])
 def register():
     if 'user_id' in session:
         return redirect(url_for('index'))
@@ -261,11 +335,48 @@ def register():
         session['user_id'] = uid
         session['username'] = username
         session['is_admin'] = False
-        flash(f'Xoş gəldiniz, {username}!', 'success')
-        return redirect(url_for('index'))
+        # Telefon təsdiqi üçün OTP başlat
+        _start_otp(phone)
+        flash(f'Xoş gəldiniz, {username}! Telefon nömrənizi təsdiqləyin.', 'success')
+        return redirect(url_for('verify_phone'))
     return render_template('register.html')
 
+@app.route('/telefon-tesdiq', methods=['GET', 'POST'])
+@login_required
+def verify_phone():
+    user = db.get_user_by_id(session['user_id'])
+    if user['phone_verified']:
+        return redirect(url_for('index'))
+    if request.method == 'POST':
+        entered = request.form.get('code', '').strip()
+        code = session.get('otp_code')
+        expires = session.get('otp_expires', 0)
+        if not code or time.time() > expires:
+            flash('Kodun vaxtı bitib. Yeni kod istəyin.', 'warning')
+        elif entered == code:
+            db.set_phone_verified(user['id'])
+            for k in ('otp_code', 'otp_phone', 'otp_expires'):
+                session.pop(k, None)
+            flash('Telefon nömrəniz təsdiqləndi! ✅', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Kod yanlışdır.', 'danger')
+    # dev rejimində kodu interfeysdə göstər (real SMS yoxdur)
+    dev_code = session.get('otp_code') if SMS_PROVIDER == 'dev' else None
+    return render_template('verify.html', phone=user['phone'], dev_code=dev_code)
+
+@app.route('/otp-yenile', methods=['POST'])
+@login_required
+@limiter.limit("3 per 5 minutes")
+def resend_otp():
+    user = db.get_user_by_id(session['user_id'])
+    if not user['phone_verified']:
+        _start_otp(user['phone'])
+        flash('Yeni təsdiq kodu göndərildi.', 'info')
+    return redirect(url_for('verify_phone'))
+
 @app.route('/giris', methods=['GET', 'POST'])
+@limiter.limit("10 per 5 minutes", methods=['POST'])
 def login():
     if 'user_id' in session:
         return redirect(url_for('index'))
@@ -302,8 +413,31 @@ def profile():
 
 # ─── Listing CRUD ────────────────────────────────────────────────────────────
 
+def _form_num(name):
+    """Formadan ədəd oxu — boş və ya yanlışdırsa None."""
+    v = (request.form.get(name) or '').strip()
+    try:
+        return float(v) if v != '' else None
+    except ValueError:
+        return None
+
+def _extra_listing_fields():
+    """Heyvana xas + xəritə sahələri (create və edit üçün ortaq)."""
+    vacc = request.form.get('vaccinated', '')
+    purpose = (request.form.get('purpose') or '').strip()
+    return {
+        'weight_kg': _form_num('weight_kg'),
+        'purpose': purpose if purpose in PURPOSES else None,
+        'breed': (request.form.get('breed') or '').strip()[:100] or None,
+        'age': (request.form.get('age') or '').strip()[:50] or None,
+        'vaccinated': 1 if vacc == '1' else (0 if vacc == '0' else None),
+        'lat': _form_num('lat'),
+        'lng': _form_num('lng'),
+    }
+
 @app.route('/elan-yarat', methods=['GET', 'POST'])
-@login_required
+@verified_required
+@limiter.limit("20 per hour", methods=['POST'])
 def create_listing():
     if request.method == 'POST':
         files = request.files.getlist('images')
@@ -321,6 +455,7 @@ def create_listing():
             'phone': request.form.get('phone', '').strip()[:20],
             'images': json.dumps(saved_images),
         }
+        data.update(_extra_listing_fields())
         if not data['category'] or not data['subcategory'] or not data['title']:
             flash('Kateqoriya, alt kateqoriya və başlıq mütləqdir.', 'danger')
             return render_template('create.html')
@@ -355,6 +490,7 @@ def edit_listing(lid):
             'phone': request.form.get('phone', '').strip()[:20],
             'images': json.dumps(all_images),
         }
+        data.update(_extra_listing_fields())
         db.update_listing(lid, data)
         flash('Elan yeniləndi.', 'success')
         return redirect(url_for('listing_detail', lid=lid))
@@ -400,7 +536,8 @@ def conversation(lid, other_id):
 
 
 @app.route('/mesaj-gonder/<int:lid>/<int:receiver_id>', methods=['POST'])
-@login_required
+@verified_required
+@limiter.limit("30 per minute")
 def send_message(lid, receiver_id):
     uid = session['user_id']
     body = request.form.get('body', '').strip()[:2000]
@@ -444,6 +581,7 @@ def favorites():
 
 @app.route('/sikayet/<int:lid>', methods=['POST'])
 @login_required
+@limiter.limit("10 per hour")
 def report_listing(lid):
     if not db.get_listing(lid):
         abort(404)

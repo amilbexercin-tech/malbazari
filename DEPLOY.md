@@ -8,6 +8,9 @@
 | `ADMIN_PHONE` | İlk admin login (yalnız boş bazada). |
 | `ADMIN_PASSWORD` | İlk admin parolu (yalnız boş bazada). |
 | `FLASK_DEBUG` | **Production-da TƏYİN ETMƏ** (defolt söndürülüb). |
+| `SESSION_COOKIE_SECURE` | HTTPS arxasında **1** təyin et (sessiya kukisi yalnız HTTPS-də). Lokal HTTP-də boş saxla. |
+| `SMS_PROVIDER` | OTP üçün: `dev` (kod ekranda) və ya real provayder (`twilio`). `sms.py`-də tamamla. |
+| `SMS_API_KEY` / `SMS_SENDER` | Real SMS provayderi üçün açar və göndərən adı. |
 
 Nümunə:
 ```bash
