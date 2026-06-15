@@ -42,6 +42,24 @@
         <button type="submit" class="btn btn-primary">Şifrəni dəyiş</button>
       </form>
     </div>
+
+    {% if user.is_admin %}
+    <!-- 2FA bərpa kodları (yalnız admin) -->
+    <div class="account-card">
+      <h2><i class="fas fa-key"></i> 2FA Bərpa Kodları</h2>
+      <p style="color:var(--text-muted);font-size:14px;margin-bottom:14px">
+        Telefonunuzu/authenticator-i itirsəniz, bu kodlarla daxil ola bilərsiniz.
+        Yenilədikdə köhnə kodlar ləğv olunur.
+      </p>
+      <form method="post" action="{{ url_for('regenerate_backup_codes') }}"
+            onsubmit="return confirm('Yeni kodlar yaradılsın? Köhnələr ləğv olunacaq.')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-key"></i> Bərpa kodları yarat
+        </button>
+      </form>
+    </div>
+    {% endif %}
   </div>
 
   <a href="{{ url_for('profile') }}" class="back-link" style="margin-top:20px;display:inline-block">

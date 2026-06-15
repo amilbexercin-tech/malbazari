@@ -3,6 +3,13 @@ import secrets
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# .env faylından ayarları yüklə (varsa) — açarları kodda deyil, .env-də saxla
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(BASE_DIR, '.env'))
+except ImportError:
+    pass
+
 
 def _load_secret_key():
     """SECRET_KEY: ətraf mühit dəyişənindən, yoxdursa .secret_key faylından oxu;

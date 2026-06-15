@@ -503,6 +503,17 @@ def backup_codes_view():
         return redirect(url_for('admin_dashboard'))
     return render_template('backup_codes.html', codes=codes, nxt=nxt)
 
+@app.route('/2fa-berpa-yenile', methods=['POST'])
+@admin_required
+def regenerate_backup_codes():
+    """Admin üçün yeni birdəfəlik bərpa kodları yaradır (köhnələri ləğv edir)."""
+    codes = [secrets.token_hex(4) for _ in range(8)]
+    db.set_backup_codes(session['user_id'], json.dumps(
+        [generate_password_hash(c) for c in codes]))
+    session['show_backup_codes'] = codes
+    session['backup_next'] = url_for('account_settings')
+    return redirect(url_for('backup_codes_view'))
+
 # ─── Parol bərpası ──────────────────────────────────────────────────────────────
 
 @app.route('/sifre-unutdum', methods=['GET', 'POST'])
