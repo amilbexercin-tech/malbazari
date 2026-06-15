@@ -1,0 +1,671 @@
+{% extends 'base.html' %}
+{% block title %}Sayt Haqqında — {{ site_name }}{% endblock %}
+{% block desc %}MalBazari.biz — Azərbaycanda mal-qara, quşçuluq və arıçılıq məhsullarının alqı-satqısı üçün ən etibarlı pulsuz elan platforması.{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+
+  <!-- ── HERO ─────────────────────────────────────────────── -->
+  <section class="about-hero">
+    <div class="about-hero-icon">🐄</div>
+    <h1>MalBazari<span>.biz</span> haqqında</h1>
+    <p>Azərbaycanda mal-qara, quşçuluq və arıçılıq məhsullarının alqı-satqısı üçün<br>
+       ən böyük pulsuz elan platforması</p>
+    <div class="about-stats-row">
+      <div class="about-stat">
+        <span class="about-stat-num" data-target="{{ stats.total_listings }}">{{ stats.total_listings }}</span>
+        <span>Ümumi elan</span>
+      </div>
+      <div class="about-stat">
+        <span class="about-stat-num" data-target="{{ stats.active_listings }}">{{ stats.active_listings }}</span>
+        <span>Aktiv elan</span>
+      </div>
+      <div class="about-stat">
+        <span class="about-stat-num" data-target="{{ stats.total_users }}">{{ stats.total_users }}</span>
+        <span>İstifadəçi</span>
+      </div>
+      <div class="about-stat">
+        <span class="about-stat-num" data-target="3">3</span>
+        <span>Kateqoriya</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── NƏ EDİRİK ──────────────────────────────────────── -->
+  <section class="about-section">
+    <h2 class="about-section-title">🎯 Biz nə edirik?</h2>
+    <div class="about-cards-grid">
+      <div class="about-card">
+        <div class="about-card-icon">🆓</div>
+        <h3>Tamamilə Pulsuz</h3>
+        <p>Elan vermək, axtarmaq və satıcılarla əlaqə qurmaq — hamısı pulsuzdur. Qeydiyyatdan keçin, elanınızı yerləşdirin.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-card-icon">📍</div>
+        <h3>Bütün Azərbaycan</h3>
+        <p>Bakıdan Naxçıvana, Gəncədən Lənkərana qədər 57 rayon üzrə axtarış və filtr imkanı.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-card-icon">📱</div>
+        <h3>Mobil Uyğun</h3>
+        <p>Telefon, planşet və ya kompüterdən rahat istifadə. Sayt hər cihazda mükəmməl görünür.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-card-icon">🔒</div>
+        <h3>Etibarlı və Güvənli</h3>
+        <p>Şifrələr şifrələnir, bütün əlaqə məlumatları qorunur. Şəxsi məlumatlarınız üçüncü tərəfə verilmir.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── KATEQORİYALAR ────────────────────────────────────── -->
+  <section class="about-section">
+    <h2 class="about-section-title">📂 Kateqoriyalar</h2>
+    <div class="about-cat-grid">
+
+      <div class="about-cat-card" style="border-top:4px solid #2d6a4f">
+        <div class="about-cat-head" style="background:linear-gradient(135deg,#1a472a,#2d6a4f)">
+          <span>🐄</span>
+          <h3>Mal-Qara</h3>
+        </div>
+        <ul>
+          <li>🐄 İnək — südlük, kəsimlik</li>
+          <li>🐃 Camış — damızlıq, südlük</li>
+          <li>🐂 Öküz &amp; Buğa — kəsimlik</li>
+          <li>🐮 Düyə &amp; Buzov — gənc mal</li>
+          <li>🐑 Qoyun, Quzu</li>
+          <li>🐐 Keçi, Çəpiş</li>
+        </ul>
+      </div>
+
+      <div class="about-cat-card" style="border-top:4px solid #b5451b">
+        <div class="about-cat-head" style="background:linear-gradient(135deg,#b5451b,#e07850)">
+          <span>🐔</span>
+          <h3>Quşçuluq</h3>
+        </div>
+        <ul>
+          <li>🐔 Toyuq — yumurta, ət cinsi</li>
+          <li>🐓 Xoruz &amp; Cücə</li>
+          <li>🦃 Hinduşka</li>
+          <li>🦆 Ördək</li>
+          <li>🪿 Qaz</li>
+          <li>🕊️ Güvərçin</li>
+        </ul>
+      </div>
+
+      <div class="about-cat-card" style="border-top:4px solid #c77800">
+        <div class="about-cat-head" style="background:linear-gradient(135deg,#c77800,#f4a522)">
+          <span>🐝</span>
+          <h3>Arıçılıq</h3>
+        </div>
+        <ul>
+          <li>🐝 Arı ailəsi — çərçivəli</li>
+          <li>📦 Arı pətəyi — taxta, plastik</li>
+          <li>🍯 Çiçək balı &amp; Dağ balı</li>
+          <li>🥛 Arı südü (royal jelly)</li>
+          <li>🕯️ Arı mumu</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── NECƏ İŞLƏYİR ─────────────────────────────────────── -->
+  <section class="about-section">
+    <h2 class="about-section-title">⚙️ Necə işləyir?</h2>
+    <div class="about-steps">
+      <div class="about-step">
+        <div class="about-step-num">1</div>
+        <div class="about-step-body">
+          <h3>Qeydiyyatdan keçin</h3>
+          <p>Ad, telefon nömrəsi və şifrə ilə bir dəqiqəyə pulsuz hesab açın.</p>
+        </div>
+      </div>
+      <div class="about-step-arrow"><i class="fas fa-chevron-right"></i></div>
+
+      <div class="about-step">
+        <div class="about-step-num">2</div>
+        <div class="about-step-body">
+          <h3>Elan yerləşdirin</h3>
+          <p>Kateqoriya seçin, başlıq, qiymət, rayon və şəkil əlavə edin — 2 dəqiqədə hazır.</p>
+        </div>
+      </div>
+      <div class="about-step-arrow"><i class="fas fa-chevron-right"></i></div>
+
+      <div class="about-step">
+        <div class="about-step-num">3</div>
+        <div class="about-step-body">
+          <h3>Alıcılar əlaqə qurar</h3>
+          <p>İstifadəçilər elanınızı görüb telefon və ya WhatsApp ilə birbaşa sizinlə əlaqə qurur.</p>
+        </div>
+      </div>
+      <div class="about-step-arrow"><i class="fas fa-chevron-right"></i></div>
+
+      <div class="about-step">
+        <div class="about-step-num">4</div>
+        <div class="about-step-body">
+          <h3>Razılaşın, satın</h3>
+          <p>Alıcı ilə görüşüb heyvanı yoxlayın, razılaşın — platforma yalnız körpü rolunu oynayır.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── VIP / BOOST ───────────────────────────────────────── -->
+  <section class="about-section">
+    <h2 class="about-section-title">⭐ Ödənişli xidmətlər</h2>
+    <p class="about-subtitle">Elanınızı öndə tutmaq üçün əlavə xidmətlər mövcuddur</p>
+    <div class="about-pricing">
+
+      <div class="about-price-card about-price-free">
+        <div class="about-price-badge">Pulsuz</div>
+        <div class="about-price-val">0 <span>AZN</span></div>
+        <h3>Standart Elan</h3>
+        <ul>
+          <li><i class="fas fa-check"></i> 30 gün aktiv qalır</li>
+          <li><i class="fas fa-check"></i> 5 şəkilə qədər</li>
+          <li><i class="fas fa-check"></i> Bütün istifadəçilər görür</li>
+          <li><i class="fas fa-check"></i> Qeydiyyat tələb olunur</li>
+        </ul>
+        <a href="{{ url_for('create_listing') }}" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:auto">
+          Elan Yerləşdir
+        </a>
+      </div>
+
+      <div class="about-price-card about-price-vip">
+        <div class="about-price-badge about-price-badge-vip">👑 VIP</div>
+        <div class="about-price-val">{{ vip_price }} <span>AZN</span></div>
+        <h3>VIP Elan</h3>
+        <ul>
+          <li><i class="fas fa-check"></i> 30 gün həmişə <strong>birinci</strong></li>
+          <li><i class="fas fa-check"></i> 👑 VIP tacı işarəsi</li>
+          <li><i class="fas fa-check"></i> Ayrıca VIP bölməsində göstərilir</li>
+          <li><i class="fas fa-check"></i> Elan müddəti 30 günə uzadılır</li>
+        </ul>
+        <a href="{{ url_for('create_listing') }}" class="btn btn-gold btn-lg" style="width:100%;justify-content:center;margin-top:auto">
+          VIP Al
+        </a>
+      </div>
+
+      <div class="about-price-card about-price-boost">
+        <div class="about-price-badge about-price-badge-boost">⬆️ Yüksəlt</div>
+        <div class="about-price-val">{{ boost_price }} <span>AZN</span></div>
+        <h3>Yüksəltmə</h3>
+        <ul>
+          <li><i class="fas fa-check"></i> {{ boost_days }} gün <strong>yuxarıda</strong> qalır</li>
+          <li><i class="fas fa-check"></i> ⬆️ Top işarəsi</li>
+          <li><i class="fas fa-check"></i> Kateqoriyada birinci sıra</li>
+          <li><i class="fas fa-check"></i> Köhnə elanlar üçün ideal</li>
+        </ul>
+        <a href="{{ url_for('create_listing') }}" class="btn btn-accent btn-lg" style="width:100%;justify-content:center;margin-top:auto;background:#e8650a;color:#fff">
+          Yüksəlt
+        </a>
+      </div>
+
+    </div>
+    <p class="about-pay-note">
+      <i class="fas fa-credit-card"></i>
+      Ödəniş kart köçürməsi ilə qəbul edilir. Köçürmədən sonra admin 24 saat ərzində aktivləşdirir.
+    </p>
+  </section>
+
+  <!-- ── QAYDALAR ───────────────────────────────────────────── -->
+  <section class="about-section">
+    <h2 class="about-section-title">📋 İstifadə Qaydaları</h2>
+    <div class="about-rules">
+      <div class="about-rule about-rule-ok">
+        <h3><i class="fas fa-check-circle"></i> İcazəlidir</h3>
+        <ul>
+          <li>Mal-qara, quşçuluq, arıçılıq məhsulları satmaq</li>
+          <li>Heyvan alqı-satqısı üçün elan vermək</li>
+          <li>Gerçək şəkilləri yükləmək</li>
+          <li>Rayon və əlaqə məlumatını yazmaq</li>
+        </ul>
+      </div>
+      <div class="about-rule about-rule-no">
+        <h3><i class="fas fa-times-circle"></i> Qadağandır</h3>
+        <ul>
+          <li>Yalan qiymət və ya saxta məlumat vermək</li>
+          <li>Evcil heyvanlar (it, pişik) üçün elan</li>
+          <li>Dublikat elanlar yerləşdirmək</li>
+          <li>Başqa platformaların reklamını etmək</li>
+        </ul>
+      </div>
+    </div>
+    <p class="about-rules-note">
+      Qaydalara zidd elanlar admin tərəfindən xəbərsiz silinə bilər.
+    </p>
+  </section>
+
+  <!-- ── FAQ ───────────────────────────────────────────────── -->
+  <section class="about-section">
+    <h2 class="about-section-title">❓ Tez-tez soruşulan suallar</h2>
+    <div class="faq-list">
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Elan vermək pulsuzdurmu? <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="faq-a">
+          Bəli, tamamilə pulsuzdur. Qeydiyyat, elan yerləşdirmək və bütün əsas funksiyalar 100% pulsuzdur. Yalnız elanınızı daha çox insana göstərmək istəsəniz VIP ({{ vip_price }} AZN) və ya Yüksəltmə ({{ boost_price }} AZN) xidmətlərindən istifadə edə bilərsiniz.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Elan nə qədər müddət aktiv qalır? <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="faq-a">
+          Pulsuz elanlar 30 gün aktiv qalır. Müddət bitdikdə elan avtomatik silinir. VIP elan satın aldığınızda müddəti 30 gün uzadılır — beləliklə VIP elan da 30 gün ərzində həmişə birinci sırada görünür.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          VIP ilə Yüksəltmə arasındakı fərq nədir? <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="faq-a">
+          <strong>VIP ({{ vip_price }} AZN, 30 gün):</strong> Elanınız ayrıca VIP bölməsində göstərilir və kateqoriyada daim birinci yerdə qalır. Üzərində 👑 işarəsi olur.<br><br>
+          <strong>Yüksəltmə ({{ boost_price }} AZN, {{ boost_days }} gün):</strong> Elanınız {{ boost_days }} gün müddətinə kateqoriya siyahısının yuxarısına çıxarılır. Köhnəlmiş elanları yenidən öndə tutmaq üçün idealdır.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Ödənişi necə etməliyəm? <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="faq-a">
+          Elanınızın səhifəsindən VIP və ya Yüksəltmə düyməsinə basın, göstərilən kart nömrəsinə məbləği köçürün. Admin ödənişi yoxladıqdan sonra 24 saat ərzində xidmət aktivləşir.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Şəkil yükləmək mütləqdirmi? <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="faq-a">
+          Mütləq deyil, amma şəkilli elanlar 3-5 dəfə daha çox baxılır. Maksimum 5 şəkil yükləyə bilərsiniz. Şəkillər avtomatik optimallaşdırılır.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Elanı silmək istəsəm nə etməliyəm? <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="faq-a">
+          Profilinizə daxil olun → elanın üzərinə gedin → "Sil" düyməsinə basın. Satış baş tutduqda elanı silmək nəzakət sayılır.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── ƏLAQƏ ─────────────────────────────────────────────── -->
+  <section class="about-section">
+    <h2 class="about-section-title">📞 Bizimlə əlaqə</h2>
+    <div class="about-contact-grid">
+      <a href="tel:{{ db_setting('contact_phone') }}" class="about-contact-card">
+        <i class="fas fa-phone-alt"></i>
+        <div>
+          <strong>Telefon</strong>
+          <span>{{ db_setting('contact_phone') }}</span>
+        </div>
+      </a>
+      <a href="mailto:{{ db_setting('contact_email') }}" class="about-contact-card">
+        <i class="fas fa-envelope"></i>
+        <div>
+          <strong>E-poçt</strong>
+          <span>{{ db_setting('contact_email') }}</span>
+        </div>
+      </a>
+      <div class="about-contact-card">
+        <i class="fas fa-map-marker-alt"></i>
+        <div>
+          <strong>Ünvan</strong>
+          <span>Bakı, Azərbaycan</span>
+        </div>
+      </div>
+      <div class="about-contact-card">
+        <i class="fas fa-clock"></i>
+        <div>
+          <strong>İş saatları</strong>
+          <span>Həftənin 7 günü, 09:00–21:00</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<style>
+/* ── About hero ── */
+.about-hero {
+  text-align: center;
+  padding: 60px 20px 40px;
+}
+.about-hero-icon { font-size: 72px; margin-bottom: 16px; }
+.about-hero h1 {
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.about-hero h1 span { color: var(--accent); }
+.about-hero p {
+  color: var(--text-muted);
+  font-size: 17px;
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto 36px;
+}
+.about-stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.about-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.about-stat-num {
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+.about-stat span:last-child { font-size: 13px; color: var(--text-muted); }
+
+/* ── Section ── */
+.about-section {
+  margin-bottom: 60px;
+}
+.about-section-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+.about-subtitle {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  font-size: 15px;
+}
+
+/* ── Feature cards ── */
+.about-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+.about-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 24px;
+  text-align: center;
+  transition: transform .2s, box-shadow .2s;
+}
+.about-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,.15);
+}
+.about-card-icon { font-size: 40px; margin-bottom: 14px; }
+.about-card h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+.about-card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+/* ── Category cards ── */
+.about-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+.about-cat-card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.about-cat-head {
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+}
+.about-cat-head span { font-size: 32px; }
+.about-cat-head h3 { font-size: 18px; font-weight: 700; margin: 0; }
+.about-cat-card ul {
+  list-style: none;
+  padding: 16px 24px 20px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.about-cat-card li { font-size: 14px; color: var(--text-muted); }
+
+/* ── Steps ── */
+.about-steps {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+.about-step {
+  flex: 1;
+  min-width: 160px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+}
+.about-step-num {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.about-step h3 { font-size: 15px; font-weight: 700; color: var(--text); margin: 0; }
+.about-step p { font-size: 13px; color: var(--text-muted); margin: 0; line-height: 1.5; }
+.about-step-arrow {
+  color: var(--text-muted);
+  font-size: 18px;
+  align-self: center;
+  padding: 0 4px;
+  display: flex;
+}
+@media(max-width:640px){ .about-step-arrow { display: none; } }
+
+/* ── Pricing ── */
+.about-pricing {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+.about-price-card {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+.about-price-vip { border-color: #f9a825; box-shadow: 0 0 24px rgba(249,168,37,.2); }
+.about-price-boost { border-color: #e8650a; }
+.about-price-badge {
+  display: inline-block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  width: fit-content;
+}
+.about-price-badge-vip { background: rgba(249,168,37,.15); border-color: rgba(249,168,37,.4); color: #f9a825; }
+.about-price-badge-boost { background: rgba(232,101,10,.15); border-color: rgba(232,101,10,.4); color: #e8650a; }
+.about-price-val {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+}
+.about-price-val span { font-size: 20px; color: var(--text-muted); font-weight: 500; }
+.about-price-card h3 { font-size: 18px; font-weight: 700; margin: 0; }
+.about-price-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+.about-price-card li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.about-price-card li .fa-check { color: #a6e3a1; font-size: 12px; }
+.about-pay-note {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ── Rules ── */
+.about-rules {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 24px;
+}
+@media(max-width:600px){ .about-rules { grid-template-columns: 1fr; } }
+.about-rule {
+  border-radius: 16px;
+  padding: 24px;
+}
+.about-rule-ok { background: rgba(166,227,161,.08); border: 1px solid rgba(166,227,161,.2); }
+.about-rule-no { background: rgba(243,139,168,.08); border: 1px solid rgba(243,139,168,.2); }
+.about-rule h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.about-rule-ok h3 { color: #a6e3a1; }
+.about-rule-no h3 { color: #f38ba8; }
+.about-rule ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.about-rule li { font-size: 14px; color: var(--text-muted); padding-left: 14px; position: relative; }
+.about-rule li::before { content: '—'; position: absolute; left: 0; color: var(--text-muted); }
+.about-rules-note { margin-top: 12px; font-size: 13px; color: var(--text-muted); text-align: center; }
+
+/* ── FAQ ── */
+.faq-list { margin-top: 24px; display: flex; flex-direction: column; gap: 8px; }
+.faq-item {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.faq-q {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 18px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+.faq-q:hover { background: var(--surface); }
+.faq-q .fa-chevron-down { font-size: 12px; color: var(--text-muted); transition: transform .25s; flex-shrink: 0; }
+.faq-q.open .fa-chevron-down { transform: rotate(180deg); }
+.faq-a {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .3s ease, padding .3s;
+  padding: 0 20px;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+.faq-a.open { max-height: 300px; padding: 0 20px 18px; }
+
+/* ── Contact ── */
+.about-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.about-contact-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color .2s, transform .2s;
+}
+a.about-contact-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.about-contact-card i { font-size: 22px; color: var(--accent); flex-shrink: 0; }
+.about-contact-card div { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.about-contact-card strong { font-size: 14px; font-weight: 700; }
+.about-contact-card span { font-size: 13px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+</style>
+
+<script>
+function toggleFaq(btn) {
+  const answer = btn.nextElementSibling;
+  const isOpen = btn.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.faq-q').forEach(b => b.classList.remove('open'));
+  document.querySelectorAll('.faq-a').forEach(a => a.classList.remove('open'));
+  if (!isOpen) {
+    btn.classList.add('open');
+    answer.classList.add('open');
+  }
+}
+</script>
+{% endblock %}

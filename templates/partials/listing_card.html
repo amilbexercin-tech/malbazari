@@ -1,0 +1,32 @@
+<article class="listing-card {% if l.is_vip %}listing-vip{% endif %} {% if l.is_boosted %}listing-boosted{% endif %}">
+  <a href="{{ url_for('listing_detail', lid=l.id) }}" class="card-img-wrap">
+    {% if l.images and l.images|length > 0 %}
+    <img src="{{ url_for('uploaded_file', filename=l.images[0]) }}" alt="{{ l.title }}" loading="lazy">
+    {% else %}
+    <div class="card-no-img">
+      {% set cat = categories.get(l.category, {}) %}
+      <span>{{ cat.get('icon','📋') }}</span>
+    </div>
+    {% endif %}
+    {% if l.is_vip %}<span class="badge-vip">👑 VIP</span>{% endif %}
+    {% if l.is_boosted %}<span class="badge-boost">⬆️ Top</span>{% endif %}
+  </a>
+  <div class="card-body">
+    <div class="card-meta">
+      <span class="card-cat">{{ l.subcategory }}</span>
+      <span class="card-region"><i class="fas fa-map-marker-alt"></i> {{ l.region or '—' }}</span>
+    </div>
+    <h3 class="card-title">
+      <a href="{{ url_for('listing_detail', lid=l.id) }}">{{ l.title | truncate(60) }}</a>
+    </h3>
+    <div class="card-footer">
+      <div class="card-price">
+        {% if l.price %}{{ "%.0f"|format(l.price|float) }} AZN{% else %}Razılaşma ilə{% endif %}
+      </div>
+      <div class="card-info">
+        <span><i class="fas fa-eye"></i> {{ l.views }}</span>
+        <span><i class="fas fa-calendar"></i> {{ l.created_at[:10] }}</span>
+      </div>
+    </div>
+  </div>
+</article>

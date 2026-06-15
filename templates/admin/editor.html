@@ -1,0 +1,588 @@
+{% extends 'admin/base.html' %}
+{% block title %}Kod Redaktoru{% endblock %}
+{% block page_title %}💻 AI Kod Redaktoru{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Editor səhifəsinin padding-ini sıfırla */
+.admin-content { padding: 0 !important; overflow: hidden; }
+
+.editor-wrap {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+  background: #1e1e2e;
+}
+
+/* ── Fayl ağacı ── */
+.file-tree {
+  background: #181825;
+  overflow-y: auto;
+  border-right: 1px solid #2a2a3e;
+  display: flex;
+  flex-direction: column;
+}
+.file-tree-header {
+  padding: 10px 14px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #585b70;
+  border-bottom: 1px solid #2a2a3e;
+  flex-shrink: 0;
+}
+.tree-scroll { overflow-y: auto; flex: 1; padding: 6px 0; }
+.tree-item {
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #cdd6f4;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 4px;
+  margin: 1px 6px;
+  transition: background .12s, color .12s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tree-item:hover { background: #2a2a3e; }
+.tree-item.active { background: rgba(137,180,250,.15); color: #89b4fa; }
+.tree-dir-label {
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #89b4fa;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 2px 6px;
+  border-radius: 4px;
+  transition: background .12s;
+}
+.tree-dir-label:hover { background: #2a2a3e; }
+.tree-dir-children { padding-left: 14px; }
+
+/* ── Editor ana panel ── */
+.editor-main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #1e1e2e;
+}
+.editor-toolbar {
+  background: #181825;
+  border-bottom: 1px solid #2a2a3e;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.editor-filename {
+  flex: 1;
+  font-size: 13px;
+  color: #a6adc8;
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#monacoContainer {
+  flex: 1;
+  min-height: 0;   /* flex child-da kritikdir */
+  width: 100%;
+}
+.ai-panel {
+  background: #181825;
+  border-top: 1px solid #2a2a3e;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.ai-input {
+  flex: 1;
+  background: #1e1e2e;
+  border: 1px solid #313244;
+  color: #cdd6f4;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  transition: border-color .2s;
+}
+.ai-input:focus { outline: none; border-color: #89b4fa; }
+.ai-loading { display: none; align-items: center; gap: 8px; color: #a6adc8; font-size: 13px; flex-shrink: 0; }
+.spinner { width: 16px; height: 16px; border: 2px solid #313244; border-top-color: #89b4fa; border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Modal panellar ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.75);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: #1e1e2e;
+  border: 1px solid #313244;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 860px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal-head {
+  padding: 14px 20px;
+  background: #181825;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #2a2a3e;
+  flex-shrink: 0;
+}
+.modal-head h3 { margin: 0; color: #cdd6f4; font-size: 15px; }
+.modal-close { background: none; border: none; color: #585b70; font-size: 22px; cursor: pointer; line-height: 1; }
+.modal-close:hover { color: #cdd6f4; }
+.modal-body { overflow: auto; padding: 16px; flex: 1; }
+.modal-foot {
+  padding: 12px 16px;
+  background: #181825;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  border-top: 1px solid #2a2a3e;
+  flex-shrink: 0;
+}
+
+/* Diff kodu */
+#diffContent {
+  font-family: 'Consolas', monospace;
+  font-size: 13px;
+  color: #a6adc8;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Tarix siyahısı */
+.history-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #2a2a3e;
+}
+.history-row:last-child { border: none; }
+.history-file { color: #89b4fa; font-size: 13px; font-family: monospace; }
+.history-meta { color: #585b70; font-size: 11px; margin-top: 3px; }
+
+/* Düymələr (bu səhifəyə məxsus) */
+.btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s; font-family: inherit; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-success-e { background: rgba(166,227,161,.15); color: #a6e3a1; border: 1px solid rgba(166,227,161,.25); }
+.btn-success-e:not(:disabled):hover { background: rgba(166,227,161,.25); }
+.btn-outline-e { background: transparent; color: #a6adc8; border: 1px solid #313244; }
+.btn-outline-e:not(:disabled):hover { background: #2a2a3e; }
+.btn-primary-e { background: #89b4fa; color: #1e1e2e; }
+.btn-primary-e:hover { background: #b4befe; }
+.btn-danger-e { background: rgba(243,139,168,.15); color: #f38ba8; border: 1px solid rgba(243,139,168,.25); }
+.btn-danger-e:not(:disabled):hover { background: rgba(243,139,168,.25); }
+.btn-sm-e { padding: 4px 10px; font-size: 12px; }
+
+select.lang-sel {
+  background: #2a2a3e;
+  border: 1px solid #313244;
+  color: #cdd6f4;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* Toast bildiriş */
+#editorToast {
+  position: fixed; bottom: 20px; right: 20px; z-index: 300;
+  background: #a6e3a1; color: #1e1e2e;
+  padding: 10px 18px; border-radius: 8px;
+  font-size: 13px; font-weight: 600;
+  display: none; animation: slideUp .3s ease;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="editor-wrap">
+
+  <!-- ── FAYL AĞACI ── -->
+  <div class="file-tree">
+    <div class="file-tree-header">Fayllar</div>
+    <div class="tree-scroll" id="treeScroll">
+      {% macro render_tree(items) %}
+      {% for item in items %}
+        {% if item.type == 'dir' %}
+        <div class="tree-dir-wrap">
+          <div class="tree-dir-label" onclick="toggleDir(this)">
+            <i class="fas fa-chevron-right" style="font-size:10px;transition:transform .2s"></i>
+            <i class="fas fa-folder" style="color:#f9a825;font-size:13px"></i>
+            {{ item.name }}
+          </div>
+          <div class="tree-dir-children" style="display:none">
+            {{ render_tree(item.children) }}
+          </div>
+        </div>
+        {% else %}
+        <div class="tree-item" onclick="openFile('{{ item.path }}')" data-path="{{ item.path | e }}">
+          {% set ext = item.name.rsplit('.', 1)[-1] if '.' in item.name else '' %}
+          {% if ext == 'py' %}<i class="fas fa-file-code" style="color:#89b4fa;font-size:12px"></i>
+          {% elif ext in ['html', 'htm'] %}<i class="fas fa-file-code" style="color:#f38ba8;font-size:12px"></i>
+          {% elif ext == 'css' %}<i class="fas fa-file-code" style="color:#a6e3a1;font-size:12px"></i>
+          {% elif ext == 'js' %}<i class="fas fa-file-code" style="color:#f9e2af;font-size:12px"></i>
+          {% else %}<i class="fas fa-file-alt" style="color:#585b70;font-size:12px"></i>{% endif %}
+          {{ item.name }}
+        </div>
+        {% endif %}
+      {% endfor %}
+      {% endmacro %}
+      {{ render_tree(file_tree) }}
+    </div>
+  </div>
+
+  <!-- ── REDAKTOR ── -->
+  <div class="editor-main">
+    <div class="editor-toolbar">
+      <span class="editor-filename" id="currentFile">← Faylı seçin</span>
+      <select id="langSelect" class="lang-sel" onchange="changeLang(this.value)">
+        <option value="python">Python</option>
+        <option value="html">HTML</option>
+        <option value="css">CSS</option>
+        <option value="javascript">JavaScript</option>
+        <option value="json">JSON</option>
+        <option value="markdown">Markdown</option>
+        <option value="plaintext">Mətn</option>
+      </select>
+      <button class="btn btn-outline-e" onclick="showHistory()" id="historyBtn" disabled>
+        <i class="fas fa-history"></i> Tarix
+      </button>
+      <button class="btn btn-success-e" onclick="saveFile()" id="saveBtn" disabled>
+        <i class="fas fa-save"></i> Ctrl+S
+      </button>
+    </div>
+
+    <div id="monacoContainer"></div>
+
+    <div class="ai-panel">
+      <span style="color:#f9a825;font-size:18px;flex-shrink:0">🤖</span>
+      <input type="text" class="ai-input" id="aiInstruction"
+             placeholder="AI tapşırığı: 'Bu düymənin rəngini yaşıl et', 'şifrəni bcrypt ilə hashla'..."
+             onkeydown="if(event.key==='Enter')sendToAI()">
+      <button class="btn btn-primary-e" onclick="sendToAI()" id="aiBtn">
+        <i class="fas fa-magic"></i> AI
+      </button>
+      <div class="ai-loading" id="aiLoading">
+        <div class="spinner"></div><span>AI işləyir...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── DIFF MODAL ── -->
+<div class="modal-overlay" id="diffModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>🤖 AI Dəyişiklikləri — Önizləmə</h3>
+      <button class="modal-close" onclick="closeDiff()">×</button>
+    </div>
+    <div class="modal-body">
+      <pre id="diffContent"></pre>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline-e" onclick="closeDiff()">İmtina</button>
+      <button class="btn btn-success-e" onclick="applyAI()">
+        <i class="fas fa-check"></i> Tətbiq Et
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TARİX MODAL ── -->
+<div class="modal-overlay" id="historyModal">
+  <div class="modal-box" style="max-width:600px">
+    <div class="modal-head">
+      <h3>🕓 Dəyişiklik Tarixi</h3>
+      <button class="modal-close" onclick="closeHistory()">×</button>
+    </div>
+    <div class="modal-body">
+      {% if history %}
+        {% for h in history %}
+        <div class="history-row">
+          <div>
+            <div class="history-file">{{ h.filename }}</div>
+            <div class="history-meta">{{ h.created_at }} · {{ h.username or 'Admin' }}</div>
+          </div>
+          <button class="btn btn-outline-e btn-sm-e" onclick="restoreHistory({{ h.id }})">
+            <i class="fas fa-undo"></i> Bərpa Et
+          </button>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p style="color:#585b70;text-align:center;padding:20px">Hələ tarix yoxdur</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div id="editorToast"></div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- 1. Əvvəlcə Monaco loader yüklənir -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+<!-- 2. Sonra require.config çağırılır -->
+<script>
+'use strict';
+
+let editor = null;
+let currentPath = '';
+let pendingCode = '';
+
+// CSRF token — base.html-dəki meta teqdən oxunur, hər POST sorğusuna əlavə edilir
+const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').content;
+
+// Monaco konfiqurasiyası — loader yüklənəndən SONRA
+require.config({
+  paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }
+});
+
+require(['vs/editor/editor.main'], function () {
+  const container = document.getElementById('monacoContainer');
+
+  editor = monaco.editor.create(container, {
+    value: '// Sol paneldən fayl seçin...',
+    language: 'python',
+    theme: 'vs-dark',
+    fontSize: 14,
+    fontFamily: "'Consolas', 'Courier New', monospace",
+    minimap: { enabled: true },
+    automaticLayout: true,
+    scrollBeyondLastLine: false,
+    wordWrap: 'off',
+    lineNumbers: 'on',
+    renderLineHighlight: 'line',
+    smoothScrolling: true,
+    cursorBlinking: 'smooth',
+    padding: { top: 12 },
+    tabSize: 4,
+  });
+
+  // Ctrl+S qısayolu
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, function () {
+    saveFile();
+  });
+
+  console.log('Monaco Editor hazırdır.');
+});
+
+// ─── Fayl ağacı ───────────────────────────────────────────
+
+function toggleDir(el) {
+  const children = el.nextElementSibling;
+  const arrow = el.querySelector('.fa-chevron-right');
+  const isOpen = children.style.display !== 'none';
+  children.style.display = isOpen ? 'none' : 'block';
+  if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
+}
+
+function openFile(path) {
+  if (!path) return;
+
+  // Aktiv faylı vurgula
+  document.querySelectorAll('.tree-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.path === path);
+  });
+
+  fetch('/admin/fayl-oku', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+    body: JSON.stringify({ path: path })
+  })
+    .then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(data => {
+      if (data.error) {
+        showToast('Xəta: ' + data.error, 'error');
+        return;
+      }
+
+      currentPath = path;
+      document.getElementById('currentFile').textContent = path;
+      document.getElementById('saveBtn').disabled = false;
+      document.getElementById('historyBtn').disabled = false;
+
+      // Dil təyin et
+      const ext = path.split('.').pop().toLowerCase();
+      const langMap = {
+        py: 'python', html: 'html', htm: 'html',
+        css: 'css', js: 'javascript', json: 'json',
+        md: 'markdown', txt: 'plaintext'
+      };
+      const lang = langMap[ext] || 'plaintext';
+      document.getElementById('langSelect').value = lang;
+
+      if (editor) {
+        const model = editor.getModel();
+        monaco.editor.setModelLanguage(model, lang);
+        editor.setValue(data.content);
+        editor.setScrollPosition({ scrollTop: 0 });
+        editor.focus();
+      }
+    })
+    .catch(err => {
+      showToast('Fayl oxunmadı: ' + err.message, 'error');
+    });
+}
+
+function changeLang(lang) {
+  if (editor) {
+    monaco.editor.setModelLanguage(editor.getModel(), lang);
+  }
+}
+
+// ─── Yadda saxla ──────────────────────────────────────────
+
+function saveFile() {
+  if (!currentPath || !editor) return;
+  const content = editor.getValue();
+
+  fetch('/admin/fayl-yaz', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+    body: JSON.stringify({ path: currentPath, content: content })
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        showToast('✓ Yadda saxlanıldı: ' + currentPath);
+      } else {
+        showToast('Xəta: ' + (data.error || 'bilinmir'), 'error');
+      }
+    })
+    .catch(err => showToast('Şəbəkə xətası: ' + err.message, 'error'));
+}
+
+// ─── AI ───────────────────────────────────────────────────
+
+function sendToAI() {
+  if (!currentPath) { showToast('Əvvəlcə fayl seçin', 'error'); return; }
+  if (!editor) return;
+
+  const instruction = document.getElementById('aiInstruction').value.trim();
+  if (!instruction) { showToast('Tapşırıq daxil edin', 'error'); return; }
+
+  document.getElementById('aiBtn').style.display = 'none';
+  document.getElementById('aiLoading').style.display = 'flex';
+
+  fetch('/admin/ai-kod', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+    body: JSON.stringify({
+      instruction: instruction,
+      code: editor.getValue(),
+      filename: currentPath
+    })
+  })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('aiBtn').style.display = '';
+      document.getElementById('aiLoading').style.display = 'none';
+
+      if (data.error) { showToast('AI xətası: ' + data.error, 'error'); return; }
+
+      pendingCode = data.code;
+      document.getElementById('diffContent').textContent = data.code;
+      document.getElementById('diffModal').classList.add('open');
+    })
+    .catch(err => {
+      document.getElementById('aiBtn').style.display = '';
+      document.getElementById('aiLoading').style.display = 'none';
+      showToast('Xəta: ' + err.message, 'error');
+    });
+}
+
+function applyAI() {
+  if (editor && pendingCode) {
+    editor.setValue(pendingCode);
+    editor.focus();
+  }
+  closeDiff();
+  document.getElementById('aiInstruction').value = '';
+  showToast('✓ AI dəyişiklikləri tətbiq edildi');
+}
+
+function closeDiff() {
+  document.getElementById('diffModal').classList.remove('open');
+  pendingCode = '';
+}
+
+// ─── Tarix ───────────────────────────────────────────────
+
+function showHistory() {
+  document.getElementById('historyModal').classList.add('open');
+}
+
+function closeHistory() {
+  document.getElementById('historyModal').classList.remove('open');
+}
+
+function restoreHistory(id) {
+  if (!confirm('Bu versiyaya qaytarılsın?')) return;
+  fetch('/admin/tarix-bax/' + id, { method: 'POST', headers: { 'X-CSRFToken': CSRF_TOKEN } })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        closeHistory();
+        if (currentPath) openFile(currentPath);
+        showToast('✓ Bərpa edildi');
+      } else {
+        showToast('Xəta: ' + data.error, 'error');
+      }
+    });
+}
+
+// ─── Yardımçı ─────────────────────────────────────────────
+
+function showToast(msg, type) {
+  const el = document.getElementById('editorToast');
+  el.textContent = msg;
+  el.style.background = type === 'error' ? '#f38ba8' : '#a6e3a1';
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+// Modal ESC ilə bağla
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeDiff();
+    closeHistory();
+  }
+});
+</script>
+{% endblock %}

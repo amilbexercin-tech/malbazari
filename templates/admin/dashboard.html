@@ -1,0 +1,127 @@
+{% extends 'admin/base.html' %}
+{% block title %}Göstərici{% endblock %}
+{% block page_title %}📊 Göstərici{% endblock %}
+
+{% block content %}
+<!-- Stats Grid -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon" style="background:linear-gradient(135deg,#4CAF50,#8BC34A)">
+      <i class="fas fa-list"></i>
+    </div>
+    <div class="stat-body">
+      <div class="stat-num">{{ stats.active_listings }}</div>
+      <div class="stat-label">Aktiv Elan</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:linear-gradient(135deg,#2196F3,#03A9F4)">
+      <i class="fas fa-users"></i>
+    </div>
+    <div class="stat-body">
+      <div class="stat-num">{{ stats.total_users }}</div>
+      <div class="stat-label">İstifadəçilər</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:linear-gradient(135deg,#FF9800,#FFC107)">
+      <i class="fas fa-crown"></i>
+    </div>
+    <div class="stat-body">
+      <div class="stat-num">{{ stats.vip_listings }}</div>
+      <div class="stat-label">VIP Elan</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:linear-gradient(135deg,#E91E63,#9C27B0)">
+      <i class="fas fa-shopping-cart"></i>
+    </div>
+    <div class="stat-body">
+      <div class="stat-num">{{ stats.pending_orders }}</div>
+      <div class="stat-label">Gözləyən Sifariş</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:linear-gradient(135deg,#009688,#4CAF50)">
+      <i class="fas fa-calendar-day"></i>
+    </div>
+    <div class="stat-body">
+      <div class="stat-num">{{ stats.today_listings }}</div>
+      <div class="stat-label">Bu gün elan</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="background:linear-gradient(135deg,#673AB7,#3F51B5)">
+      <i class="fas fa-coins"></i>
+    </div>
+    <div class="stat-body">
+      <div class="stat-num">{{ "%.0f"|format(stats.total_revenue) }} ₼</div>
+      <div class="stat-label">Ümumi Gəlir</div>
+    </div>
+  </div>
+</div>
+
+<!-- Pending Orders -->
+{% if pending_orders %}
+<div class="admin-section">
+  <div class="section-head">
+    <h2><i class="fas fa-clock"></i> Gözləyən Sifarişlər</h2>
+    <a href="{{ url_for('admin_orders') }}" class="btn btn-sm btn-outline">Hamısı</a>
+  </div>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>#</th><th>İstifadəçi</th><th>Elan</th><th>Növ</th><th>Məbləğ</th><th>Tarix</th><th>Əməliyyat</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in pending_orders %}
+        <tr>
+          <td>{{ o.id }}</td>
+          <td>{{ o.username }}<br><small>{{ o.user_phone }}</small></td>
+          <td><small>{{ o.listing_title | truncate(30) if o.listing_title else '—' }}</small></td>
+          <td>
+            {% if o.type == 'vip' %}<span class="badge-vip-sm">👑 VIP</span>
+            {% else %}<span class="badge-boost-sm">⬆️ Yüksəlt</span>{% endif %}
+          </td>
+          <td><strong>{{ o.amount }} ₼</strong></td>
+          <td>{{ o.created_at[:16] }}</td>
+          <td>
+            <form method="post" action="{{ url_for('admin_approve_order', oid=o.id) }}" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-success btn-xs">✓ Təsdiqlə</button>
+            </form>
+            <form method="post" action="{{ url_for('admin_reject_order', oid=o.id) }}" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-danger btn-xs">✗ Rədd</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Quick Links -->
+<div class="quick-links">
+  <a href="{{ url_for('admin_listings') }}" class="quick-link">
+    <i class="fas fa-list"></i>
+    <span>Elanları İdarə Et</span>
+  </a>
+  <a href="{{ url_for('admin_users') }}" class="quick-link">
+    <i class="fas fa-users"></i>
+    <span>İstifadəçilər</span>
+  </a>
+  <a href="{{ url_for('admin_settings') }}" class="quick-link">
+    <i class="fas fa-credit-card"></i>
+    <span>Kart Nömrəsi</span>
+  </a>
+  <a href="{{ url_for('admin_editor') }}" class="quick-link">
+    <i class="fas fa-code"></i>
+    <span>AI Kod Redaktoru</span>
+  </a>
+</div>
+{% endblock %}

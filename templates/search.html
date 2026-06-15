@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Axtarış: {{ q }} — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+  <div class="search-header">
+    <h1>Axtarış nəticələri: <span>"{{ q }}"</span></h1>
+    <p>{{ total }} elan tapıldı</p>
+  </div>
+
+  <div class="search-filters">
+    <form method="get" class="filter-row">
+      <input type="hidden" name="q" value="{{ q }}">
+      <select name="cat" onchange="this.form.submit()">
+        <option value="">Bütün kateqoriyalar</option>
+        {% for slug, c in categories.items() %}
+        <option value="{{ slug }}" {% if cat == slug %}selected{% endif %}>{{ c.icon }} {{ c.name }}</option>
+        {% endfor %}
+      </select>
+      <select name="region" onchange="this.form.submit()">
+        <option value="">Bütün rayonlar</option>
+        {% for r in regions %}
+        <option value="{{ r }}" {% if region == r %}selected{% endif %}>{{ r }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+
+  {% if listings %}
+  <div class="listings-grid">
+    {% for l in listings %}{% include 'partials/listing_card.html' %}{% endfor %}
+  </div>
+  {% if pages > 1 %}
+  <div class="pagination">
+    {% if page > 1 %}
+    <a href="?q={{ q }}&cat={{ cat }}&region={{ region }}&page={{ page-1 }}" class="page-btn">‹</a>
+    {% endif %}
+    {% for p in range(1, pages+1) %}
+      {% if p == page %}<span class="page-btn active">{{ p }}</span>
+      {% elif p == 1 or p == pages or (p >= page-2 and p <= page+2) %}
+      <a href="?q={{ q }}&cat={{ cat }}&region={{ region }}&page={{ p }}" class="page-btn">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if page < pages %}
+    <a href="?q={{ q }}&cat={{ cat }}&region={{ region }}&page={{ page+1 }}" class="page-btn">›</a>
+    {% endif %}
+  </div>
+  {% endif %}
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🔍</div>
+    <h3>"{{ q }}" üzrə nəticə tapılmadı</h3>
+    <p>Başqa açar söz cəhd edin</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Ana Səhifəyə Qayıt</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

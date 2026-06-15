@@ -1,0 +1,65 @@
+{% extends 'admin/base.html' %}
+{% block title %}Sifarişlər{% endblock %}
+{% block page_title %}🛒 Sifarişlər{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+  <div class="section-head">
+    <h2>Sifarişlər ({{ total }})</h2>
+    <div class="head-filters">
+      <a href="?status=" class="filter-chip {% if not status %}active{% endif %}">Hamısı</a>
+      <a href="?status=pending" class="filter-chip {% if status == 'pending' %}active{% endif %}">Gözləyən</a>
+      <a href="?status=approved" class="filter-chip {% if status == 'approved' %}active{% endif %}">Təsdiqlənmiş</a>
+      <a href="?status=rejected" class="filter-chip {% if status == 'rejected' %}active{% endif %}">Rədd edilmiş</a>
+    </div>
+  </div>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr><th>#</th><th>İstifadəçi</th><th>Elan</th><th>Növ</th><th>Məbləğ</th><th>Status</th><th>Tarix</th><th>Əməliyyat</th></tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td>{{ o.id }}</td>
+          <td>{{ o.username }}<br><small>{{ o.user_phone }}</small></td>
+          <td>{{ (o.listing_title or '—') | truncate(30) }}</td>
+          <td>
+            {% if o.type == 'vip' %}<span class="badge-vip-sm">👑 VIP</span>
+            {% else %}<span class="badge-boost-sm">⬆️ Yüksəlt</span>{% endif %}
+          </td>
+          <td><strong>{{ o.amount }} ₼</strong></td>
+          <td>
+            <span class="status-badge status-{{ o.status }}">
+              {% if o.status == 'pending' %}Gözləyir
+              {% elif o.status == 'approved' %}Təsdiqləndi
+              {% else %}Rədd edildi{% endif %}
+            </span>
+          </td>
+          <td>{{ o.created_at[:16] }}</td>
+          <td>
+            {% if o.status == 'pending' %}
+            <form method="post" action="{{ url_for('admin_approve_order', oid=o.id) }}" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-success btn-xs">✓ Təsdiqlə</button>
+            </form>
+            <form method="post" action="{{ url_for('admin_reject_order', oid=o.id) }}" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-danger btn-xs">✗ Rədd</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if pages > 1 %}
+  <div class="pagination">
+    {% for p in range(1, pages+1) %}
+    <a href="?status={{ status }}&page={{ p }}" class="page-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

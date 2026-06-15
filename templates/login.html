@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Giriş — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-bg"></div>
+  <div class="auth-card">
+    <div class="auth-logo">🐄</div>
+    <h1>Xoş Gəldiniz!</h1>
+    <p class="auth-sub">Hesabınıza daxil olun</p>
+
+    <form method="post" class="auth-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label><i class="fas fa-phone"></i> Telefon nömrəsi</label>
+        <input type="tel" name="phone" placeholder="+994 XX XXX XX XX" required
+               value="{{ request.form.get('phone','') }}" autocomplete="tel">
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-lock"></i> Şifrə</label>
+        <div class="password-wrap">
+          <input type="password" name="password" placeholder="Şifrənizi daxil edin"
+                 required id="passInput" autocomplete="current-password">
+          <button type="button" class="toggle-pass" onclick="togglePass()">
+            <i class="fas fa-eye" id="passIcon"></i>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">
+        <i class="fas fa-sign-in-alt"></i> Daxil Ol
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      Hesabınız yoxdur? <a href="{{ url_for('register') }}">Qeydiyyat</a>
+    </div>
+  </div>
+</div>
+
+<script>
+function togglePass(){
+  const inp = document.getElementById('passInput');
+  const ico = document.getElementById('passIcon');
+  if(inp.type==='password'){inp.type='text';ico.className='fas fa-eye-slash';}
+  else{inp.type='password';ico.className='fas fa-eye';}
+}
+</script>
+{% endblock %}

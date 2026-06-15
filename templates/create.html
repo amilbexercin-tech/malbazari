@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% block title %}Elan Əlavə Et — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+  <div class="form-page">
+    <div class="form-header">
+      <h1><i class="fas fa-plus-circle"></i> Elan Əlavə Et</h1>
+      <p>Pulsuz elanınız 30 gün aktiv qalacaq</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="listing-form" id="createForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <!-- Category -->
+      <div class="form-section">
+        <h2 class="form-section-title">🏷️ Kateqoriya</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Kateqoriya *</label>
+            <select name="category" id="categorySelect" required onchange="updateSubcats()">
+              <option value="">Seçin...</option>
+              {% for slug, cat in categories.items() %}
+              <option value="{{ slug }}">{{ cat.icon }} {{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Alt Kateqoriya *</label>
+            <select name="subcategory" id="subcatSelect" required onchange="updateExample()">
+              <option value="">Əvvəlcə kateqoriya seçin</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Basic Info -->
+      <div class="form-section">
+        <h2 class="form-section-title">📝 Əsas Məlumat</h2>
+        <div class="form-group">
+          <label>Başlıq *</label>
+          <input type="text" name="title" id="titleInput"
+                 placeholder="Əvvəlcə alt kateqoriya seçin..." required maxlength="200">
+          <span class="form-hint" id="subcatHint" style="display:none;color:#f9a825;font-weight:500"></span>
+        </div>
+        <div class="form-group">
+          <label>Açıqlama</label>
+          <textarea name="description" rows="5" placeholder="Heyvan haqqında ətraflı məlumat yazın..." maxlength="2000"></textarea>
+          <span class="char-count" id="descCount">0/2000</span>
+        </div>
+      </div>
+
+      <!-- Price & Details -->
+      <div class="form-section">
+        <h2 class="form-section-title">💰 Qiymət & Ölçü</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Qiymət (AZN)</label>
+            <input type="number" name="price" placeholder="0" min="0" step="0.01">
+            <span class="form-hint">Boş qoyursanız "Razılaşma ilə" yazılır</span>
+          </div>
+          <div class="form-group">
+            <label>Çəki / Ölçü</label>
+            <input type="text" name="weight" placeholder="Məs: 350 kq, 5 litr">
+          </div>
+          <div class="form-group">
+            <label>Say (ədəd)</label>
+            <input type="number" name="quantity" value="1" min="1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Location & Contact -->
+      <div class="form-section">
+        <h2 class="form-section-title">📍 Yer & Əlaqə</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Rayon *</label>
+            <select name="region" required>
+              <option value="">Rayon seçin...</option>
+              {% for r in regions %}
+              <option value="{{ r }}">{{ r }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Əlaqə nömrəsi *</label>
+            <input type="tel" name="phone" placeholder="+994 XX XXX XX XX" required maxlength="20"
+                   value="{{ current_user.phone if current_user else '' }}">
+          </div>
+        </div>
+      </div>
+
+      <!-- Images -->
+      <div class="form-section">
+        <h2 class="form-section-title">📸 Şəkillər (max 5)</h2>
+        <div class="upload-area" id="uploadArea">
+          <input type="file" name="images" accept="image/*" multiple id="imageInput"
+                 onchange="previewImages(this)">
+          <div class="upload-placeholder" id="uploadPlaceholder">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Şəkilləri buraya sürüşdürün və ya klikləyin</p>
+            <span>PNG, JPG, WEBP — maksimum 5 şəkil</span>
+          </div>
+          <div class="image-previews" id="imagePreviews"></div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i class="fas fa-check"></i> Elanı Əlavə Et
+        </button>
+        <a href="{{ url_for('index') }}" class="btn btn-outline btn-lg">İmtina Et</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const SUBCATS = {{ categories | tojson }};
+const EXAMPLES = {{ subcategory_examples | tojson }};
+
+function updateSubcats(){
+  const cat = document.getElementById('categorySelect').value;
+  const sub = document.getElementById('subcatSelect');
+  sub.innerHTML = '<option value="">Seçin...</option>';
+  if(cat && SUBCATS[cat]){
+    SUBCATS[cat].subcategories.forEach(s=>{
+      sub.innerHTML += `<option value="${s}">${s}</option>`;
+    });
+  }
+  updateExample();
+}
+
+function updateExample(){
+  const sub = document.getElementById('subcatSelect').value;
+  const hint = document.getElementById('subcatHint');
+  const titleInput = document.getElementById('titleInput');
+  if(sub && EXAMPLES[sub]){
+    hint.textContent = '💡 ' + EXAMPLES[sub];
+    hint.style.display = 'block';
+    titleInput.placeholder = EXAMPLES[sub];
+  } else {
+    hint.style.display = 'none';
+    titleInput.placeholder = 'Məs: 2 yaşlı savalanlı inək satılır';
+  }
+}
+
+function previewImages(input){
+  const previews = document.getElementById('imagePreviews');
+  const placeholder = document.getElementById('uploadPlaceholder');
+  previews.innerHTML = '';
+  const files = Array.from(input.files).slice(0,5);
+  if(files.length>0) placeholder.style.display='none';
+  files.forEach((f,i)=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      previews.innerHTML += `<div class="preview-item">
+        <img src="${e.target.result}" alt="Şəkil ${i+1}">
+        <span>${i+1}</span>
+      </div>`;
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+// Drag & drop
+const area = document.getElementById('uploadArea');
+area.addEventListener('dragover',e=>{e.preventDefault();area.classList.add('drag-over');});
+area.addEventListener('dragleave',()=>area.classList.remove('drag-over'));
+area.addEventListener('drop',e=>{
+  e.preventDefault();area.classList.remove('drag-over');
+  const input = document.getElementById('imageInput');
+  input.files = e.dataTransfer.files;
+  previewImages(input);
+});
+
+// Char counter
+document.querySelector('[name=description]').addEventListener('input',function(){
+  document.getElementById('descCount').textContent = this.value.length+'/2000';
+});
+</script>
+{% endblock %}

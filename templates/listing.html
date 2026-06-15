@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}{{ listing.title }} — {{ site_name }}{% endblock %}
+{% block desc %}{{ listing.description | truncate(150) }}{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+  <nav class="breadcrumb">
+    <a href="{{ url_for('index') }}">Ana Səhifə</a>
+    <span>›</span>
+    <a href="{{ url_for('category', slug=listing.category) }}">{{ cat.get('name','') }}</a>
+    <span>›</span>
+    <span>{{ listing.title | truncate(40) }}</span>
+  </nav>
+
+  <div class="listing-layout">
+    <!-- LEFT: Images + Details -->
+    <div class="listing-main">
+      <!-- Image Gallery -->
+      <div class="gallery">
+        {% if listing.images %}
+        <div class="gallery-main">
+          <img src="{{ url_for('uploaded_file', filename=listing.images[0]) }}"
+               alt="{{ listing.title }}" id="mainImg" class="gallery-main-img">
+          {% if listing.is_vip %}<span class="badge-vip large">👑 VIP</span>{% endif %}
+          {% if listing.is_boosted %}<span class="badge-boost large">⬆️ Top</span>{% endif %}
+        </div>
+        {% if listing.images | length > 1 %}
+        <div class="gallery-thumbs">
+          {% for img in listing.images %}
+          <img src="{{ url_for('uploaded_file', filename=img) }}"
+               alt="{{ loop.index }}" class="thumb {% if loop.first %}active{% endif %}"
+               onclick="setMainImg(this, '{{ url_for('uploaded_file', filename=img) }}')">
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="gallery-main">
+          <div class="gallery-no-img">
+            <span style="font-size:80px">{{ cat.get('icon','📋') }}</span>
+            <p>Şəkil yoxdur</p>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Description -->
+      <div class="listing-desc-box">
+        <h2>Ətraflı məlumat</h2>
+        <p>{{ listing.description or 'Açıqlama yoxdur.' }}</p>
+      </div>
+
+      <!-- Owner Actions -->
+      {% if current_user and current_user.id == listing.user_id %}
+      <div class="owner-actions">
+        <h3>Elan idarəsi</h3>
+        <div class="owner-btns">
+          <a href="{{ url_for('edit_listing', lid=listing.id) }}" class="btn btn-outline">
+            <i class="fas fa-edit"></i> Düzəliş Et
+          </a>
+          {% if not listing.is_vip %}
+          <a href="{{ url_for('vip_order', lid=listing.id) }}" class="btn btn-gold">
+            👑 VIP Yap — {{ vip_price }} AZN
+          </a>
+          {% endif %}
+          {% if not listing.is_boosted %}
+          <a href="{{ url_for('boost_order', lid=listing.id) }}" class="btn btn-accent" style="background:#e8650a;color:#fff">
+            ⬆️ Yüksəlt — {{ boost_price }} AZN
+          </a>
+          {% endif %}
+          <form method="post" action="{{ url_for('delete_listing', lid=listing.id) }}"
+                onsubmit="return confirm('Elanı silmək istədiyinizə əminsiniz?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger">
+              <i class="fas fa-trash"></i> Sil
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- RIGHT: Info Card -->
+    <aside class="listing-sidebar">
+      <div class="info-card">
+        <div class="info-price">
+          {% if listing.price %}
+          <span>{{ "%.0f"|format(listing.price|float) }}</span> AZN
+          {% else %}
+          <span>Razılaşma</span> ilə
+          {% endif %}
+        </div>
+        <h1 class="info-title">{{ listing.title }}</h1>
+        <div class="info-tags">
+          <span class="tag"><i class="fas fa-tag"></i> {{ listing.subcategory }}</span>
+          {% if listing.region %}
+          <span class="tag"><i class="fas fa-map-marker-alt"></i> {{ listing.region }}</span>
+          {% endif %}
+          {% if listing.weight %}
+          <span class="tag"><i class="fas fa-weight-hanging"></i> {{ listing.weight }}</span>
+          {% endif %}
+          {% if listing.quantity %}
+          <span class="tag"><i class="fas fa-hashtag"></i> {{ listing.quantity }} ədəd</span>
+          {% endif %}
+        </div>
+        <div class="info-meta">
+          <span><i class="fas fa-eye"></i> {{ listing.views }} baxış</span>
+          <span><i class="fas fa-calendar"></i> {{ listing.created_at[:10] }}</span>
+          {% if listing.expires_at %}
+          <span><i class="fas fa-clock"></i> {{ listing.expires_at[:10] }}-dək</span>
+          {% endif %}
+        </div>
+        <div class="info-seller">
+          <i class="fas fa-user-circle seller-avatar"></i>
+          <div>
+            <div class="seller-name">{{ listing.username or 'İstifadəçi' }}</div>
+            <div class="seller-label">Satıcı</div>
+          </div>
+        </div>
+        {% if listing.phone %}
+        <a href="tel:{{ listing.phone }}" class="btn btn-call">
+          <i class="fas fa-phone-alt"></i> {{ listing.phone }}
+        </a>
+        <a href="https://wa.me/{{ listing.phone | replace('+','') | replace(' ','') }}"
+           target="_blank" rel="noopener" class="btn btn-whatsapp">
+          <i class="fab fa-whatsapp"></i> WhatsApp
+        </a>
+        {% endif %}
+      </div>
+
+      <!-- Safety tips -->
+      <div class="safety-card">
+        <h4><i class="fas fa-shield-alt"></i> Təhlükəsizlik</h4>
+        <ul>
+          <li>Şəxsən görüşərək alın-satın</li>
+          <li>Pul köçürməzdən əvvəl yoxlayın</li>
+          <li>Heyvanı görmədən ödəniş etməyin</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+function setMainImg(thumb, src){
+  document.getElementById('mainImg').src = src;
+  document.querySelectorAll('.thumb').forEach(t=>t.classList.remove('active'));
+  thumb.classList.add('active');
+}
+</script>
+{% endblock %}

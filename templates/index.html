@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% block title %}{{ site_name }} — Mal, Quş, Arı Alqı-Satqısı{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<section class="hero">
+  <canvas id="heroCanvas"></canvas>
+  <div class="hero-content">
+    <div class="hero-badge animate-fade-in">🇦🇿 Azərbaycanın №1 Heyvan Bazarı</div>
+    <h1 class="hero-title animate-slide-up">
+      Mal, Quş, Arı<br>
+      <span class="gradient-text">Alın & Satın</span>
+    </h1>
+    <p class="hero-subtitle animate-slide-up delay-1">
+      {{ stats.active_listings }}+ aktiv elan · {{ stats.total_users }}+ istifadəçi
+    </p>
+    <div class="hero-search animate-slide-up delay-2">
+      <form action="{{ url_for('search') }}" method="get" class="hero-search-form">
+        <div class="hero-search-inner">
+          <select name="cat">
+            <option value="">Bütün kateqoriyalar</option>
+            {% for slug, cat in categories.items() %}
+            <option value="{{ slug }}">{{ cat.icon }} {{ cat.name }}</option>
+            {% endfor %}
+          </select>
+          <input type="text" name="q" placeholder="İnək, qoyun, bal...">
+          <button type="submit"><i class="fas fa-search"></i> Axtar</button>
+        </div>
+      </form>
+    </div>
+    <div class="hero-stats animate-fade-in delay-3">
+      <div class="hero-stat">
+        <span class="stat-num">{{ stats.active_listings }}</span>
+        <span class="stat-label">Aktiv Elan</span>
+      </div>
+      <div class="hero-stat">
+        <span class="stat-num">{{ stats.total_users }}</span>
+        <span class="stat-label">İstifadəçi</span>
+      </div>
+      <div class="hero-stat">
+        <span class="stat-num">{{ stats.today_listings }}</span>
+        <span class="stat-label">Bu gün</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero-scroll-hint">
+    <i class="fas fa-chevron-down"></i>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Kateqoriyalar</h2>
+      <p>İstədiyiniz növü seçin</p>
+    </div>
+    <div class="cat-grid">
+      {% for slug, cat in categories.items() %}
+      <a href="{{ url_for('category', slug=slug) }}" class="cat-card" style="--cat-gradient:{{ cat.bg }}">
+        <div class="cat-card-inner">
+          <div class="cat-card-icon">{{ cat.icon }}</div>
+          <div class="cat-card-content">
+            <h3>{{ cat.name }}</h3>
+            <p>{{ cat.subcategories | join(', ') | truncate(50) }}</p>
+            <span class="cat-card-count">{{ cat_counts.get(slug, 0) }} elan</span>
+          </div>
+          <div class="cat-card-arrow"><i class="fas fa-arrow-right"></i></div>
+        </div>
+        <div class="cat-card-bg"></div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- RECENT LISTINGS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Son Elanlar</h2>
+      <a href="{{ url_for('search') }}" class="see-all">Hamısını gör <i class="fas fa-arrow-right"></i></a>
+    </div>
+    {% if recent %}
+    <div class="listings-grid">
+      {% for l in recent %}
+      {% include 'partials/listing_card.html' %}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <h3>Hələ elan yoxdur</h3>
+      <p>İlk elanı siz əlavə edin!</p>
+      <a href="{{ url_for('create_listing') }}" class="btn btn-primary">Elan Əlavə Et</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section section-how">
+  <div class="container">
+    <div class="section-header">
+      <h2>Necə İşləyir?</h2>
+      <p>Sadə 3 addımda elan verin</p>
+    </div>
+    <div class="how-grid">
+      <div class="how-card" data-step="1">
+        <div class="how-icon">📝</div>
+        <h3>Qeydiyyat</h3>
+        <p>Nömrəniz və şifrənizlə pulsuz qeydiyyatdan keçin</p>
+      </div>
+      <div class="how-card" data-step="2">
+        <div class="how-icon">📸</div>
+        <h3>Elan Əlavə Et</h3>
+        <p>Şəkil yükləyin, qiymət və məlumatları doldurun</p>
+      </div>
+      <div class="how-card" data-step="3">
+        <div class="how-icon">📞</div>
+        <h3>Alıcıları Gözləyin</h3>
+        <p>Elanınız 30 gün aktiv qalır, alıcılar sizinlə əlaqə saxlayır</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Hero canvas particle animation
+(function(){
+  const canvas = document.getElementById('heroCanvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  const symbols = ['🌿','🌾','🍀','🐄','🐔','🐝','⭐'];
+
+  function resize(){
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+
+  function createParticles(){
+    particles = [];
+    const count = Math.floor((canvas.width * canvas.height) / 18000);
+    for(let i=0;i<count;i++){
+      particles.push({
+        x: Math.random()*canvas.width,
+        y: Math.random()*canvas.height,
+        size: Math.random()*14+8,
+        speedX: (Math.random()-0.5)*0.3,
+        speedY: (Math.random()-0.5)*0.3,
+        opacity: Math.random()*0.15+0.05,
+        symbol: symbols[Math.floor(Math.random()*symbols.length)]
+      });
+    }
+  }
+
+  function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p=>{
+      p.x += p.speedX;
+      p.y += p.speedY;
+      if(p.x<-20) p.x=canvas.width+20;
+      if(p.x>canvas.width+20) p.x=-20;
+      if(p.y<-20) p.y=canvas.height+20;
+      if(p.y>canvas.height+20) p.y=-20;
+      ctx.globalAlpha = p.opacity;
+      ctx.font = p.size+'px Arial';
+      ctx.fillText(p.symbol, p.x, p.y);
+    });
+    ctx.globalAlpha=1;
+    requestAnimationFrame(animate);
+  }
+
+  resize();
+  createParticles();
+  animate();
+  window.addEventListener('resize',()=>{resize();createParticles();});
+})();
+</script>
+{% endblock %}

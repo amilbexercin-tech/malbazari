@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Verilənlər bazası (SQLite)
+*.db
+*.db-wal
+*.db-shm
+
+# Sirlər / mühit
+.secret_key
+.env
+
+# Yüklənmiş şəkillər (istifadəçi məzmunu)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Müxtəlif
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}{{ cat.name }} Elanları — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="background:{{ cat.bg }}">
+  <div class="container">
+    <div class="page-header-content">
+      <span class="page-header-icon">{{ cat.icon }}</span>
+      <div>
+        <h1>{{ cat.name }}</h1>
+        <p>{{ total }} elan tapıldı</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container page-content">
+  <div class="content-layout">
+    <!-- SIDEBAR FILTERS -->
+    <aside class="sidebar">
+      <div class="filter-box">
+        <h3><i class="fas fa-filter"></i> Filtr</h3>
+        <form method="get" id="filterForm">
+          <div class="filter-group">
+            <label>Alt kateqoriya</label>
+            <div class="subcats">
+              <a href="{{ url_for('category', slug=slug) }}?region={{ region }}"
+                 class="subcat-btn {% if not sub %}active{% endif %}">Hamısı</a>
+              {% for s in cat.subcategories %}
+              <a href="{{ url_for('category', slug=slug) }}?sub={{ s }}&region={{ region }}"
+                 class="subcat-btn {% if sub == s %}active{% endif %}">{{ s }}</a>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="filter-group">
+            <label for="regionSelect">Rayon</label>
+            <select name="region" id="regionSelect" onchange="applyFilter()">
+              <option value="">Bütün rayonlar</option>
+              {% for r in regions %}
+              <option value="{{ r }}" {% if region == r %}selected{% endif %}>{{ r }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% if sub %}
+          <input type="hidden" name="sub" value="{{ sub }}">
+          {% endif %}
+        </form>
+      </div>
+
+      <div class="promo-sidebar">
+        <div class="promo-s-icon">👑</div>
+        <h4>VIP Elan</h4>
+        <p>Həmişə birinci olun!</p>
+        <strong>{{ vip_price }} AZN / 30 gün</strong>
+        <a href="{{ url_for('create_listing') }}" class="btn btn-gold btn-sm mt-2">Elan Ver</a>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+      <!-- VIP -->
+      {% if vips %}
+      <div class="vip-section mb-4">
+        <div class="vip-header"><span>👑</span> VIP Elanlar</div>
+        <div class="listings-grid">
+          {% for l in vips %}{% include 'partials/listing_card.html' %}{% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Regular -->
+      {% if listings %}
+      <div class="listings-grid">
+        {% for l in listings %}{% include 'partials/listing_card.html' %}{% endfor %}
+      </div>
+      <!-- Pagination -->
+      {% if pages > 1 %}
+      <div class="pagination">
+        {% if page > 1 %}
+        <a href="?sub={{ sub }}&region={{ region }}&page={{ page-1 }}" class="page-btn">‹ Əvvəlki</a>
+        {% endif %}
+        {% for p in range(1, pages+1) %}
+          {% if p == page %}
+          <span class="page-btn active">{{ p }}</span>
+          {% elif p == 1 or p == pages or (p >= page-2 and p <= page+2) %}
+          <a href="?sub={{ sub }}&region={{ region }}&page={{ p }}" class="page-btn">{{ p }}</a>
+          {% elif p == page-3 or p == page+3 %}
+          <span class="page-btn">...</span>
+          {% endif %}
+        {% endfor %}
+        {% if page < pages %}
+        <a href="?sub={{ sub }}&region={{ region }}&page={{ page+1 }}" class="page-btn">Sonrakı ›</a>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">{{ cat.icon }}</div>
+        <h3>Bu kateqoriyada elan yoxdur</h3>
+        <p>İlk elanı siz əlavə edin!</p>
+        <a href="{{ url_for('create_listing') }}" class="btn btn-primary">Elan Əlavə Et</a>
+      </div>
+      {% endif %}
+    </main>
+  </div>
+</div>
+
+<script>
+function applyFilter(){
+  const form = document.getElementById('filterForm');
+  const region = document.getElementById('regionSelect').value;
+  const url = new URL(window.location);
+  if(region) url.searchParams.set('region', region);
+  else url.searchParams.delete('region');
+  url.searchParams.delete('page');
+  window.location = url.toString();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Qeydiyyat — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-bg"></div>
+  <div class="auth-card">
+    <div class="auth-logo">🐄</div>
+    <h1>Qeydiyyat</h1>
+    <p class="auth-sub">Pulsuz hesab yaradın</p>
+
+    <form method="post" class="auth-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label><i class="fas fa-user"></i> Ad Soyad</label>
+        <input type="text" name="username" placeholder="Adınızı daxil edin" required
+               value="{{ request.form.get('username','') }}" maxlength="50">
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-phone"></i> Telefon nömrəsi</label>
+        <input type="tel" name="phone" placeholder="+994 XX XXX XX XX" required
+               value="{{ request.form.get('phone','') }}" autocomplete="tel">
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-lock"></i> Şifrə</label>
+        <div class="password-wrap">
+          <input type="password" name="password" placeholder="Ən az 6 simvol" required
+                 id="passInput" minlength="6" autocomplete="new-password">
+          <button type="button" class="toggle-pass" onclick="togglePass()">
+            <i class="fas fa-eye" id="passIcon"></i>
+          </button>
+        </div>
+        <div class="password-strength" id="passStrength"></div>
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-lock"></i> Şifrəni Təsdiqlə</label>
+        <input type="password" name="confirm" placeholder="Şifrəni yenidən daxil edin"
+               required id="confirmInput" autocomplete="new-password">
+        <span class="match-hint" id="matchHint"></span>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">
+        <i class="fas fa-user-plus"></i> Qeydiyyatdan Keç
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      Artıq hesabınız var? <a href="{{ url_for('login') }}">Daxil Ol</a>
+    </div>
+  </div>
+</div>
+
+<script>
+function togglePass(){
+  const inp = document.getElementById('passInput');
+  const ico = document.getElementById('passIcon');
+  if(inp.type==='password'){inp.type='text';ico.className='fas fa-eye-slash';}
+  else{inp.type='password';ico.className='fas fa-eye';}
+}
+document.getElementById('passInput').addEventListener('input',function(){
+  const v=this.value, el=document.getElementById('passStrength');
+  if(!v){el.innerHTML='';return;}
+  if(v.length<6) el.innerHTML='<span style="color:#dc3545">Zəif</span>';
+  else if(v.length<10) el.innerHTML='<span style="color:#fd7e14">Orta</span>';
+  else el.innerHTML='<span style="color:#28a745">Güclü</span>';
+});
+document.getElementById('confirmInput').addEventListener('input',function(){
+  const pass=document.getElementById('passInput').value;
+  const el=document.getElementById('matchHint');
+  if(this.value===pass) el.innerHTML='<span style="color:#28a745">✓ Uyğun gəlir</span>';
+  else el.innerHTML='<span style="color:#dc3545">✗ Uyğun gəlmir</span>';
+});
+</script>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}Profilim — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+  <div class="profile-layout">
+    <aside class="profile-sidebar">
+      <div class="profile-card">
+        <div class="profile-avatar">{{ user.username[0].upper() }}</div>
+        <h2>{{ user.username }}</h2>
+        <p class="profile-phone"><i class="fas fa-phone"></i> {{ user.phone }}</p>
+        <p class="profile-date"><i class="fas fa-calendar"></i> {{ user.created_at[:10] }} tarixindən</p>
+        <div class="profile-stats">
+          <div class="pstat"><span>{{ total }}</span><small>Elan</small></div>
+          <div class="pstat">
+            <span>{{ listings | selectattr('is_vip', 'equalto', 1) | list | length }}</span>
+            <small>VIP</small>
+          </div>
+        </div>
+        <a href="{{ url_for('create_listing') }}" class="btn btn-primary btn-full mt-3">
+          <i class="fas fa-plus"></i> Yeni Elan
+        </a>
+      </div>
+    </aside>
+
+    <main class="profile-main">
+      <div class="profile-tabs">
+        <button class="tab-btn active" onclick="showTab('active')">Aktiv ({{ listings | selectattr('status', 'equalto', 'active') | list | length }})</button>
+        <button class="tab-btn" onclick="showTab('expired')">Müddəti keçmiş</button>
+      </div>
+
+      <div id="tab-active">
+        {% set active_list = listings | selectattr('status', 'equalto', 'active') | list %}
+        {% if active_list %}
+        <div class="my-listings">
+          {% for l in active_list %}
+          <div class="my-listing-row {% if l.is_vip %}row-vip{% endif %}">
+            <div class="my-listing-img">
+              {% if l.images %}
+              <img src="{{ url_for('uploaded_file', filename=l.images[0]) }}" alt="">
+              {% else %}
+              <div class="no-img-sm">{{ categories.get(l.category,{}).get('icon','📋') }}</div>
+              {% endif %}
+            </div>
+            <div class="my-listing-info">
+              <h3><a href="{{ url_for('listing_detail', lid=l.id) }}">{{ l.title | truncate(60) }}</a></h3>
+              <div class="my-listing-meta">
+                {% if l.is_vip %}<span class="badge-sm-vip">👑 VIP</span>{% endif %}
+                {% if l.is_boosted %}<span class="badge-sm-boost">⬆️ Top</span>{% endif %}
+                <span>{{ l.subcategory }}</span>
+                <span>{{ l.region or '—' }}</span>
+                <span>{{ l.views }} baxış</span>
+                <span>{{ l.expires_at[:10] if l.expires_at else '—' }}-dək</span>
+              </div>
+              {% if l.price %}<div class="my-listing-price">{{ "%.0f"|format(l.price|float) }} AZN</div>{% endif %}
+            </div>
+            <div class="my-listing-actions">
+              {% if not l.is_vip %}
+              <a href="{{ url_for('vip_order', lid=l.id) }}" class="btn btn-gold btn-xs" title="VIP yap">👑</a>
+              {% endif %}
+              {% if not l.is_boosted %}
+              <a href="{{ url_for('boost_order', lid=l.id) }}" class="btn btn-accent btn-xs" title="Yüksəlt">⬆️</a>
+              {% endif %}
+              <a href="{{ url_for('edit_listing', lid=l.id) }}" class="btn btn-outline btn-xs">
+                <i class="fas fa-edit"></i>
+              </a>
+              <form method="post" action="{{ url_for('delete_listing', lid=l.id) }}"
+                    onsubmit="return confirm('Silinsin?')" style="display:inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger btn-xs"><i class="fas fa-trash"></i></button>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <h3>Aktiv elanınız yoxdur</h3>
+          <a href="{{ url_for('create_listing') }}" class="btn btn-primary">İlk Elanı Əlavə Et</a>
+        </div>
+        {% endif %}
+      </div>
+
+      <div id="tab-expired" style="display:none">
+        {% set expired_list = listings | selectattr('status', 'equalto', 'expired') | list %}
+        {% if expired_list %}
+        <div class="my-listings">
+          {% for l in expired_list %}
+          <div class="my-listing-row row-expired">
+            <div class="my-listing-info">
+              <h3>{{ l.title | truncate(60) }}</h3>
+              <div class="my-listing-meta">
+                <span style="color:#dc3545">Müddəti keçib</span>
+                <span>{{ l.subcategory }}</span>
+              </div>
+            </div>
+            <div class="my-listing-actions">
+              <form method="post" action="{{ url_for('delete_listing', lid=l.id) }}"
+                    onsubmit="return confirm('Silinsin?')" style="display:inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger btn-xs"><i class="fas fa-trash"></i></button>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state"><p>Müddəti keçmiş elan yoxdur.</p></div>
+        {% endif %}
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+function showTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-active').style.display = name==='active'?'block':'none';
+  document.getElementById('tab-expired').style.display = name==='expired'?'block':'none';
+}
+</script>
+{% endblock %}

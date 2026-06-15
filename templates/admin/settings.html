@@ -1,0 +1,81 @@
+{% extends 'admin/base.html' %}
+{% block title %}Parametrlər{% endblock %}
+{% block page_title %}⚙️ Parametrlər{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+  <form method="post" class="settings-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="settings-grid">
+      <div class="settings-group">
+        <h3><i class="fas fa-globe"></i> Sayt Məlumatları</h3>
+        <div class="form-group">
+          <label>Sayt Adı</label>
+          <input type="text" name="site_name" value="{{ settings.get('site_name', 'MalBazari.biz') }}">
+        </div>
+        <div class="form-group">
+          <label>Əlaqə Telefonu</label>
+          <input type="tel" name="contact_phone" value="{{ settings.get('contact_phone', '') }}">
+        </div>
+        <div class="form-group">
+          <label>Əlaqə E-mail</label>
+          <input type="email" name="contact_email" value="{{ settings.get('contact_email', '') }}">
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h3><i class="fas fa-credit-card"></i> Ödəniş Kartı</h3>
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i>
+          Bu kart nömrəsi VIP/Yüksəltmə sifarişlərini əlavə edərkən istifadəçilərə göstərilir.
+        </div>
+        <div class="form-group">
+          <label>Kart Nömrəsi</label>
+          <input type="text" name="card_number" value="{{ settings.get('card_number', '') }}"
+                 placeholder="1234 5678 9012 3456">
+        </div>
+        <div class="form-group">
+          <label>Kart Sahibi</label>
+          <input type="text" name="card_owner" value="{{ settings.get('card_owner', '') }}"
+                 placeholder="Ad Soyad">
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h3><i class="fas fa-robot"></i> AI / Anthropic API</h3>
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i>
+          Kod redaktorundakı AI funksiyası üçün Anthropic API açarı lazımdır.
+          <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> saytından əldə edin.
+        </div>
+        <div class="form-group">
+          <label>Anthropic API Açarı</label>
+          <div class="password-wrap">
+            <input type="password" name="anthropic_api_key" id="apiKeyInput"
+                   value="{{ settings.get('anthropic_api_key', '') }}"
+                   placeholder="sk-ant-...">
+            <button type="button" class="toggle-pass" onclick="toggleApiKey()">
+              <i class="fas fa-eye" id="apiKeyIcon"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-footer">
+      <button type="submit" class="btn btn-primary btn-lg">
+        <i class="fas fa-save"></i> Yadda Saxla
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+function toggleApiKey(){
+  const inp = document.getElementById('apiKeyInput');
+  const ico = document.getElementById('apiKeyIcon');
+  if(inp.type==='password'){inp.type='text';ico.className='fas fa-eye-slash';}
+  else{inp.type='password';ico.className='fas fa-eye';}
+}
+</script>
+{% endblock %}
