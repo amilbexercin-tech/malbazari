@@ -23,7 +23,7 @@ import sms
 from config import (SECRET_KEY, UPLOAD_FOLDER, MAX_CONTENT_LENGTH,
                     CATEGORIES, REGIONS, BASE_DIR, MAX_IMAGES,
                     SUBCATEGORY_EXAMPLES, DEBUG, PURPOSES, SORT_OPTIONS,
-                    OTP_TTL_SECONDS, SMS_PROVIDER)
+                    OTP_TTL_SECONDS, SMS_PROVIDER, REQUIRE_PHONE_VERIFICATION)
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
@@ -80,16 +80,18 @@ def admin_required(f):
     return decorated
 
 def verified_required(f):
-    """Telefonu təsdiqlənməmiş istifadəçini təsdiq səhifəsinə yönəldir."""
+    """Telefonu təsdiqlənməmiş istifadəçini təsdiq səhifəsinə yönəldir.
+    REQUIRE_PHONE_VERIFICATION söndürülübsə, sadəcə girişi tələb edir."""
     @wraps(f)
     def decorated(*args, **kwargs):
         if 'user_id' not in session:
             flash('Zəhmət olmasa giriş edin.', 'warning')
             return redirect(url_for('login', next=request.url))
-        user = db.get_user_by_id(session['user_id'])
-        if not user or not user['phone_verified']:
-            flash('Davam etmək üçün telefon nömrənizi təsdiqləyin.', 'warning')
-            return redirect(url_for('verify_phone'))
+        if REQUIRE_PHONE_VERIFICATION:
+            user = db.get_user_by_id(session['user_id'])
+            if not user or not user['phone_verified']:
+                flash('Davam etmək üçün telefon nömrənizi təsdiqləyin.', 'warning')
+                return redirect(url_for('verify_phone'))
         return f(*args, **kwargs)
     return decorated
 
@@ -355,15 +357,22 @@ def register():
         session['user_id'] = uid
         session['username'] = username
         session['is_admin'] = False
-        # Telefon təsdiqi üçün OTP başlat
-        _start_otp(phone)
-        flash(f'Xoş gəldiniz, {username}! Telefon nömrənizi təsdiqləyin.', 'success')
-        return redirect(url_for('verify_phone'))
+        if REQUIRE_PHONE_VERIFICATION:
+            # Telefon təsdiqi üçün OTP başlat
+            _start_otp(phone)
+            flash(f'Xoş gəldiniz, {username}! Telefon nömrənizi təsdiqləyin.', 'success')
+            return redirect(url_for('verify_phone'))
+        # Təsdiq söndürülüb — birbaşa qəbul et
+        db.set_phone_verified(uid)
+        flash(f'Xoş gəldiniz, {username}!', 'success')
+        return redirect(url_for('index'))
     return render_template('register.html')
 
 @app.route('/telefon-tesdiq', methods=['GET', 'POST'])
 @login_required
 def verify_phone():
+    if not REQUIRE_PHONE_VERIFICATION:
+        return redirect(url_for('index'))
     user = db.get_user_by_id(session['user_id'])
     if user['phone_verified']:
         return redirect(url_for('index'))

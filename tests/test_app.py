@@ -177,6 +177,8 @@ def test_animal_filters(client):
 # ─── OTP telefon təsdiqi ──────────────────────────────────────
 
 def test_otp_verification_flow(client):
+    import app as app_module
+    app_module.REQUIRE_PHONE_VERIFICATION = True  # bu test üçün təsdiqi aktiv et
     register(client, "OtpUser", "+994500000013", verify=False)
     # Təsdiqlənməmiş istifadəçi elan yarada bilmir → təsdiq səhifəsinə yönəlir
     r = client.get("/elan-yarat")
@@ -191,6 +193,8 @@ def test_otp_verification_flow(client):
 
 
 def test_otp_wrong_code(client):
+    import app as app_module
+    app_module.REQUIRE_PHONE_VERIFICATION = True
     register(client, "WrongOtp", "+994500000014", verify=False)
     client.post("/telefon-tesdiq", data={"code": "000000"}, follow_redirects=True)
     u = database.get_user_by_phone("+994500000014")

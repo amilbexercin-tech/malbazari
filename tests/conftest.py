@@ -11,6 +11,7 @@ def client(tmp_path):
     database.init_db()
     app_module.app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
     app_module.limiter.enabled = False   # testlərdə rate limit söndürülür
+    app_module.REQUIRE_PHONE_VERIFICATION = False  # defolt: təsdiq söndürülü
     with app_module.app.test_client() as c:
         yield c
 
