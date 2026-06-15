@@ -10,6 +10,11 @@ try:
 except ImportError:
     pass
 
+# Kalıcı data qovluğu. Lokal: layihə qovluğu. Railway/production: kalıcı disk
+# (məs. DATA_DIR=/data) — baza, şəkillər və açar burada saxlanır ki, deploy-da itməsin.
+DATA_DIR = os.environ.get('DATA_DIR', BASE_DIR)
+os.makedirs(DATA_DIR, exist_ok=True)
+
 
 def _load_secret_key():
     """SECRET_KEY: ətraf mühit dəyişənindən, yoxdursa .secret_key faylından oxu;
@@ -17,7 +22,7 @@ def _load_secret_key():
     env = os.environ.get('SECRET_KEY')
     if env:
         return env
-    key_file = os.path.join(BASE_DIR, '.secret_key')
+    key_file = os.path.join(DATA_DIR, '.secret_key')
     if os.path.exists(key_file):
         with open(key_file, 'r', encoding='utf-8') as f:
             saved = f.read().strip()
@@ -40,8 +45,8 @@ DEBUG = os.environ.get('FLASK_DEBUG', '').lower() in ('1', 'true', 'yes', 'on')
 ADMIN_PHONE = os.environ.get('ADMIN_PHONE', '@Superlahiye@')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '@A7413695a@')
 
-DATABASE_PATH = os.path.join(BASE_DIR, 'malbazari.db')
-UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
+DATABASE_PATH = os.path.join(DATA_DIR, 'malbazari.db')
+UPLOAD_FOLDER = os.path.join(DATA_DIR, 'static', 'uploads')
 MAX_CONTENT_LENGTH = 16 * 1024 * 1024
 
 CATEGORIES = {
