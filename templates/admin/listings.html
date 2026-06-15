@@ -35,8 +35,6 @@
             <a href="{{ url_for('listing_detail', lid=l.id) }}" target="_blank">
               {{ l.title | truncate(40) }}
             </a>
-            {% if l.is_vip %}<span class="badge-vip-sm">👑</span>{% endif %}
-            {% if l.is_boosted %}<span class="badge-boost-sm">⬆️</span>{% endif %}
             <br><small>{{ l.username }}</small>
           </td>
           <td>{{ l.subcategory }}</td>
@@ -47,12 +45,6 @@
           </td>
           <td>{{ l.created_at[:10] }}</td>
           <td>
-            {% if not l.is_vip %}
-            <form method="post" action="{{ url_for('admin_set_vip', lid=l.id) }}" style="display:inline">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button class="btn btn-gold btn-xs" title="VIP ver">👑</button>
-            </form>
-            {% endif %}
             <a href="{{ url_for('edit_listing', lid=l.id) }}" class="btn btn-outline btn-xs">
               <i class="fas fa-edit"></i>
             </a>

@@ -13,8 +13,8 @@
         <div class="profile-stats">
           <div class="pstat"><span>{{ total }}</span><small>Elan</small></div>
           <div class="pstat">
-            <span>{{ listings | selectattr('is_vip', 'equalto', 1) | list | length }}</span>
-            <small>VIP</small>
+            <span>{{ listings | selectattr('status', 'equalto', 'active') | list | length }}</span>
+            <small>Aktiv</small>
           </div>
         </div>
         <a href="{{ url_for('create_listing') }}" class="btn btn-primary btn-full mt-3">
@@ -34,7 +34,7 @@
         {% if active_list %}
         <div class="my-listings">
           {% for l in active_list %}
-          <div class="my-listing-row {% if l.is_vip %}row-vip{% endif %}">
+          <div class="my-listing-row">
             <div class="my-listing-img">
               {% if l.images %}
               <img src="{{ url_for('uploaded_file', filename=l.images[0]) }}" alt="">
@@ -45,8 +45,6 @@
             <div class="my-listing-info">
               <h3><a href="{{ url_for('listing_detail', lid=l.id) }}">{{ l.title | truncate(60) }}</a></h3>
               <div class="my-listing-meta">
-                {% if l.is_vip %}<span class="badge-sm-vip">👑 VIP</span>{% endif %}
-                {% if l.is_boosted %}<span class="badge-sm-boost">⬆️ Top</span>{% endif %}
                 <span>{{ l.subcategory }}</span>
                 <span>{{ l.region or '—' }}</span>
                 <span>{{ l.views }} baxış</span>
@@ -55,12 +53,6 @@
               {% if l.price %}<div class="my-listing-price">{{ "%.0f"|format(l.price|float) }} AZN</div>{% endif %}
             </div>
             <div class="my-listing-actions">
-              {% if not l.is_vip %}
-              <a href="{{ url_for('vip_order', lid=l.id) }}" class="btn btn-gold btn-xs" title="VIP yap">👑</a>
-              {% endif %}
-              {% if not l.is_boosted %}
-              <a href="{{ url_for('boost_order', lid=l.id) }}" class="btn btn-accent btn-xs" title="Yüksəlt">⬆️</a>
-              {% endif %}
               <a href="{{ url_for('edit_listing', lid=l.id) }}" class="btn btn-outline btn-xs">
                 <i class="fas fa-edit"></i>
               </a>

@@ -35,10 +35,6 @@
       <a href="{{ url_for('admin_users') }}" class="nav-item {% if request.endpoint == 'admin_users' %}active{% endif %}">
         <i class="fas fa-users"></i> İstifadəçilər
       </a>
-      <a href="{{ url_for('admin_orders') }}" class="nav-item {% if request.endpoint == 'admin_orders' %}active{% endif %}">
-        <i class="fas fa-shopping-cart"></i> Sifarişlər
-        {% if stats and stats.pending_orders %}<span class="nav-badge badge-warn">{{ stats.pending_orders }}</span>{% endif %}
-      </a>
       <a href="{{ url_for('admin_reports') }}" class="nav-item {% if request.endpoint == 'admin_reports' %}active{% endif %}">
         <i class="fas fa-flag"></i> Şikayətlər
         {% if stats and stats.pending_reports %}<span class="nav-badge badge-warn">{{ stats.pending_reports }}</span>{% endif %}
@@ -69,10 +65,10 @@
       </button>
       <div class="topbar-title">{% block page_title %}Admin Panel{% endblock %}</div>
       <div class="topbar-right">
-        {% if stats and stats.pending_orders %}
-        <a href="{{ url_for('admin_orders') }}" class="topbar-notif">
+        {% if stats and stats.pending_reports %}
+        <a href="{{ url_for('admin_reports') }}" class="topbar-notif">
           <i class="fas fa-bell"></i>
-          <span class="notif-badge">{{ stats.pending_orders }}</span>
+          <span class="notif-badge">{{ stats.pending_reports }}</span>
         </a>
         {% endif %}
         <div class="topbar-user">

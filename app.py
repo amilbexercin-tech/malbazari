@@ -14,8 +14,8 @@ from PIL import Image
 import database as db
 import i18n
 from config import (SECRET_KEY, UPLOAD_FOLDER, MAX_CONTENT_LENGTH,
-                    CATEGORIES, REGIONS, VIP_PRICE, BOOST_PRICE, BOOST_DAYS,
-                    BASE_DIR, MAX_IMAGES, SUBCATEGORY_EXAMPLES, DEBUG)
+                    CATEGORIES, REGIONS, BASE_DIR, MAX_IMAGES,
+                    SUBCATEGORY_EXAMPLES, DEBUG)
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
@@ -103,8 +103,8 @@ def listing_to_dict(row):
     return d
 
 # ─── Background Maintenance (throttled) ───────────────────────────────────────
-# Vaxtı keçmiş elanların silinməsi və boost-ların sıfırlanması ƏVVƏL hər sorğuda
-# işləyirdi (yavaşladırdı). İndi ən çox MAINTENANCE_INTERVAL saniyədə bir dəfə işləyir.
+# Vaxtı keçmiş elanların silinməsi ƏVVƏL hər sorğuda işləyirdi (yavaşladırdı).
+# İndi ən çox MAINTENANCE_INTERVAL saniyədə bir dəfə işləyir.
 
 MAINTENANCE_INTERVAL = 600  # 10 dəqiqə
 _maintenance_lock = threading.Lock()
@@ -112,7 +112,7 @@ _last_maintenance = 0.0
 
 
 def run_maintenance():
-    """Vaxtı keçmiş elanları sil + boost müddəti bitənləri sıfırla.
+    """Vaxtı keçmiş elanları sil.
     İnterval keçməyibsə və ya başqa sorğu eyni anda işlədirsə — heç nə etmir."""
     global _last_maintenance
     now = time.monotonic()
@@ -128,7 +128,6 @@ def run_maintenance():
                 os.remove(os.path.join(UPLOAD_FOLDER, img))
             except OSError:
                 pass
-        db.reset_boosts()
     finally:
         _maintenance_lock.release()
 
@@ -144,9 +143,6 @@ def inject_globals():
     return {
         'categories': CATEGORIES,
         'regions': REGIONS,
-        'vip_price': VIP_PRICE,
-        'boost_price': BOOST_PRICE,
-        'boost_days': BOOST_DAYS,
         'subcategory_examples': SUBCATEGORY_EXAMPLES,
         'site_name': db.get_setting('site_name', 'MalBazari.biz'),
         'current_user': db.get_user_by_id(session['user_id']) if 'user_id' in session else None,
@@ -174,7 +170,6 @@ def set_language(lang):
 
 @app.route('/')
 def index():
-    vip_listings = [listing_to_dict(l) for l in db.get_vip_listings()]
     recent_rows, _ = db.get_listings(page=1, per_page=12)
     recent = [listing_to_dict(l) for l in recent_rows]
 
@@ -183,8 +178,8 @@ def index():
         rows, total = db.get_listings(category=slug, per_page=1)
         cat_counts[slug] = total
     stats = db.get_stats()
-    return render_template('index.html', vip_listings=vip_listings,
-                           recent=recent, cat_counts=cat_counts, stats=stats)
+    return render_template('index.html', recent=recent,
+                           cat_counts=cat_counts, stats=stats)
 
 @app.route('/kateqoriya/<slug>')
 def category(slug):
@@ -195,7 +190,6 @@ def category(slug):
     region = request.args.get('region', '')
     page = int(request.args.get('page', 1))
 
-    vips = [listing_to_dict(l) for l in db.get_vip_listings(slug)]
     rows, total = db.get_listings(category=slug,
                                   subcategory=sub if sub else None,
                                   region=region if region else None,
@@ -203,7 +197,7 @@ def category(slug):
     listings = [listing_to_dict(l) for l in rows]
     pages = (total + 19) // 20
     return render_template('category.html', cat=cat, slug=slug,
-                           listings=listings, vips=vips, total=total,
+                           listings=listings, total=total,
                            page=page, pages=pages, sub=sub, region=region)
 
 @app.route('/elan/<int:lid>')
@@ -462,51 +456,13 @@ def report_listing(lid):
     return redirect(url_for('listing_detail', lid=lid))
 
 
-# ─── Payment Routes ───────────────────────────────────────────────────────────
-
-@app.route('/vip-sifaris/<int:lid>')
-@login_required
-def vip_order(lid):
-    row = db.get_listing(lid)
-    if not row or row['user_id'] != session['user_id']:
-        abort(403)
-    card = db.get_setting('card_number')
-    card_owner = db.get_setting('card_owner')
-    return render_template('payment.html', listing=dict(row),
-                           otype='vip', amount=VIP_PRICE,
-                           card=card, card_owner=card_owner)
-
-@app.route('/yukselt-sifaris/<int:lid>')
-@login_required
-def boost_order(lid):
-    row = db.get_listing(lid)
-    if not row or row['user_id'] != session['user_id']:
-        abort(403)
-    card = db.get_setting('card_number')
-    card_owner = db.get_setting('card_owner')
-    return render_template('payment.html', listing=dict(row),
-                           otype='boost', amount=BOOST_PRICE,
-                           card=card, card_owner=card_owner)
-
-@app.route('/odenis-gonder/<int:lid>/<otype>', methods=['POST'])
-@login_required
-def submit_payment(lid, otype):
-    if otype not in ('vip', 'boost'):
-        abort(400)
-    amount = VIP_PRICE if otype == 'vip' else BOOST_PRICE
-    oid = db.create_order(session['user_id'], lid, otype, amount)
-    flash('Ödəniş sorğunuz göndərildi. Admin təsdiq etdikdən sonra aktivləşəcək.', 'success')
-    return redirect(url_for('listing_detail', lid=lid))
-
 # ─── Admin Routes ─────────────────────────────────────────────────────────────
 
 @app.route('/admin/')
 @admin_required
 def admin_dashboard():
     stats = db.get_stats()
-    orders, _ = db.get_orders(status='pending', per_page=5)
-    return render_template('admin/dashboard.html', stats=stats,
-                           pending_orders=[dict(o) for o in orders])
+    return render_template('admin/dashboard.html', stats=stats)
 
 @app.route('/admin/elanlar')
 @admin_required
@@ -527,13 +483,6 @@ def admin_delete_listing(lid):
     flash('Elan silindi.', 'info')
     return redirect(url_for('admin_listings'))
 
-@app.route('/admin/vip-ver/<int:lid>', methods=['POST'])
-@admin_required
-def admin_set_vip(lid):
-    db.set_vip(lid)
-    flash('VIP aktivləşdi.', 'success')
-    return redirect(url_for('admin_listings'))
-
 @app.route('/admin/istifadeciler')
 @admin_required
 def admin_users():
@@ -552,31 +501,6 @@ def admin_delete_user(uid):
         db.delete_user(uid)
         flash('İstifadəçi silindi.', 'info')
     return redirect(url_for('admin_users'))
-
-@app.route('/admin/sifarigler')
-@admin_required
-def admin_orders():
-    page = int(request.args.get('page', 1))
-    status = request.args.get('status', '')
-    rows, total = db.get_orders(page=page, per_page=30,
-                                status=status if status else None)
-    pages = (total + 29) // 30
-    return render_template('admin/orders.html', orders=[dict(o) for o in rows],
-                           total=total, page=page, pages=pages, status=status)
-
-@app.route('/admin/sifaris-tesdiq/<int:oid>', methods=['POST'])
-@admin_required
-def admin_approve_order(oid):
-    db.approve_order(oid)
-    flash('Sifariş təsdiqləndi, xidmət aktivləşdi.', 'success')
-    return redirect(url_for('admin_orders'))
-
-@app.route('/admin/sifaris-red/<int:oid>', methods=['POST'])
-@admin_required
-def admin_reject_order(oid):
-    db.reject_order(oid)
-    flash('Sifariş rədd edildi.', 'info')
-    return redirect(url_for('admin_orders'))
 
 @app.route('/admin/sikayetler')
 @admin_required

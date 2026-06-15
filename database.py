@@ -2,7 +2,7 @@ import sqlite3
 import json
 import os
 from datetime import datetime, timedelta
-from config import DATABASE_PATH, FREE_DAYS, UPLOAD_FOLDER, ADMIN_PHONE, ADMIN_PASSWORD, BOOST_DAYS
+from config import DATABASE_PATH, FREE_DAYS, UPLOAD_FOLDER, ADMIN_PHONE, ADMIN_PASSWORD
 
 def get_db():
     conn = sqlite3.connect(DATABASE_PATH)
@@ -182,18 +182,6 @@ def increment_views(lid):
     conn.execute("UPDATE listings SET views=views+1 WHERE id=?", (lid,))
     conn.commit(); conn.close()
 
-def get_vip_listings(category=None):
-    conn = get_db()
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    if category:
-        rows = conn.execute("""SELECT * FROM listings WHERE status='active' AND is_vip=1
-            AND vip_expires>? AND category=? ORDER BY created_at DESC""", (now, category)).fetchall()
-    else:
-        rows = conn.execute("""SELECT * FROM listings WHERE status='active' AND is_vip=1
-            AND vip_expires>? ORDER BY created_at DESC LIMIT 8""", (now,)).fetchall()
-    conn.close()
-    return rows
-
 def get_listings(category=None, subcategory=None, region=None, search=None,
                  page=1, per_page=20, user_id=None):
     conn = get_db()
@@ -218,10 +206,10 @@ def get_listings(category=None, subcategory=None, region=None, search=None,
     offset = (page - 1) * per_page
 
     total = conn.execute(f"SELECT COUNT(*) FROM listings l WHERE {where}", params).fetchone()[0]
-    # VIP first, then boosted, then newest
+    # Ən yenidən köhnəyə
     rows = conn.execute(f"""SELECT l.*,u.username FROM listings l
         LEFT JOIN users u ON l.user_id=u.id WHERE {where}
-        ORDER BY l.is_vip DESC, l.is_boosted DESC, l.created_at DESC
+        ORDER BY l.created_at DESC
         LIMIT ? OFFSET ?""", params + [per_page, offset]).fetchall()
     conn.close()
     return rows, total
@@ -249,29 +237,6 @@ def expire_listings():
 
     conn.commit(); conn.close()
     return images_to_delete
-
-def set_vip(lid, days=30):
-    conn = get_db()
-    exp = (datetime.now() + timedelta(days=days)).strftime('%Y-%m-%d %H:%M:%S')
-    # Also extend the listing's active period to match VIP duration
-    conn.execute(
-        "UPDATE listings SET is_vip=1, vip_expires=?, expires_at=? WHERE id=?",
-        (exp, exp, lid)
-    )
-    conn.commit(); conn.close()
-
-def set_boost(lid):
-    conn = get_db()
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    conn.execute("UPDATE listings SET is_boosted=1, boost_date=? WHERE id=?", (now, lid))
-    conn.commit(); conn.close()
-
-def reset_boosts():
-    """Yüksəltmə müddəti (config.BOOST_DAYS) keçmiş elanlardan boost işarəsini götürür."""
-    conn = get_db()
-    cutoff = (datetime.now() - timedelta(days=BOOST_DAYS)).strftime('%Y-%m-%d %H:%M:%S')
-    conn.execute("UPDATE listings SET is_boosted=0 WHERE boost_date<?", (cutoff,))
-    conn.commit(); conn.close()
 
 def admin_get_all_listings(page=1, per_page=30, status=None):
     conn = get_db()
@@ -327,56 +292,6 @@ def get_all_users(page=1, per_page=30):
 def delete_user(uid):
     conn = get_db()
     conn.execute("DELETE FROM users WHERE id=?", (uid,))
-    conn.commit(); conn.close()
-
-# ─── Orders ─────────────────────────────────────────────────────────────────
-
-def create_order(user_id, listing_id, otype, amount):
-    conn = get_db()
-    conn.execute("INSERT INTO orders(user_id,listing_id,type,amount) VALUES(?,?,?,?)",
-                 (user_id, listing_id, otype, amount))
-    oid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
-    conn.commit(); conn.close()
-    return oid
-
-def get_orders(page=1, per_page=30, status=None):
-    conn = get_db()
-    conds = ["1=1"]
-    params = []
-    if status:
-        conds.append("o.status=?"); params.append(status)
-    where = " AND ".join(conds)
-    offset = (page-1)*per_page
-    total = conn.execute(f"SELECT COUNT(*) FROM orders o WHERE {where}", params).fetchone()[0]
-    rows = conn.execute(f"""SELECT o.*,u.username,u.phone as user_phone,l.title as listing_title
-        FROM orders o LEFT JOIN users u ON o.user_id=u.id
-        LEFT JOIN listings l ON o.listing_id=l.id
-        WHERE {where} ORDER BY o.created_at DESC LIMIT ? OFFSET ?""",
-        params+[per_page, offset]).fetchall()
-    conn.close()
-    return rows, total
-
-def approve_order(oid):
-    conn = get_db()
-    order = conn.execute("SELECT * FROM orders WHERE id=?", (oid,)).fetchone()
-    if order:
-        if order['type'] == 'vip':
-            exp = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S')
-            # Extend listing expiry to match VIP duration
-            conn.execute(
-                "UPDATE listings SET is_vip=1, vip_expires=?, expires_at=? WHERE id=?",
-                (exp, exp, order['listing_id'])
-            )
-        elif order['type'] == 'boost':
-            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            conn.execute("UPDATE listings SET is_boosted=1, boost_date=? WHERE id=?",
-                         (now, order['listing_id']))
-        conn.execute("UPDATE orders SET status='approved' WHERE id=?", (oid,))
-    conn.commit(); conn.close()
-
-def reject_order(oid):
-    conn = get_db()
-    conn.execute("UPDATE orders SET status='rejected' WHERE id=?", (oid,))
     conn.commit(); conn.close()
 
 # ─── Settings ────────────────────────────────────────────────────────────────
@@ -576,13 +491,9 @@ def get_stats():
     stats = {
         'total_listings': conn.execute("SELECT COUNT(*) FROM listings").fetchone()[0],
         'active_listings': conn.execute("SELECT COUNT(*) FROM listings WHERE status='active'").fetchone()[0],
-        'vip_listings': conn.execute("SELECT COUNT(*) FROM listings WHERE is_vip=1 AND status='active'").fetchone()[0],
         'total_users': conn.execute("SELECT COUNT(*) FROM users WHERE is_admin=0").fetchone()[0],
         'today_listings': conn.execute("SELECT COUNT(*) FROM listings WHERE date(created_at)=?", (today,)).fetchone()[0],
-        'pending_orders': conn.execute("SELECT COUNT(*) FROM orders WHERE status='pending'").fetchone()[0],
         'pending_reports': conn.execute("SELECT COUNT(*) FROM reports WHERE status='pending'").fetchone()[0],
-        'total_revenue': conn.execute("SELECT COALESCE(SUM(amount),0) FROM orders WHERE status='approved'").fetchone()[0],
-        'today_revenue': conn.execute("SELECT COALESCE(SUM(amount),0) FROM orders WHERE status='approved' AND date(created_at)=?", (today,)).fetchone()[0],
     }
     conn.close()
     return stats

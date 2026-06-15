@@ -151,10 +151,10 @@
     </div>
   </section>
 
-  <!-- ── VIP / BOOST ───────────────────────────────────────── -->
-  <section class="about-section">
-    <h2 class="about-section-title">⭐ Ödənişli xidmətlər</h2>
-    <p class="about-subtitle">Elanınızı öndə tutmaq üçün əlavə xidmətlər mövcuddur</p>
+  <!-- ── PULSUZ ────────────────────────────────────────────── -->
+  <section class="about-section" id="pricing">
+    <h2 class="about-section-title">🆓 Tamamilə Pulsuz</h2>
+    <p class="about-subtitle">Bütün xidmətlər 100% pulsuzdur — heç bir ödəniş yoxdur</p>
     <div class="about-pricing">
 
       <div class="about-price-card about-price-free">
@@ -165,48 +165,14 @@
           <li><i class="fas fa-check"></i> 30 gün aktiv qalır</li>
           <li><i class="fas fa-check"></i> 5 şəkilə qədər</li>
           <li><i class="fas fa-check"></i> Bütün istifadəçilər görür</li>
-          <li><i class="fas fa-check"></i> Qeydiyyat tələb olunur</li>
+          <li><i class="fas fa-check"></i> Alıcılarla birbaşa mesajlaşma</li>
         </ul>
-        <a href="{{ url_for('create_listing') }}" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:auto">
+        <a href="{{ url_for('create_listing') }}" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:auto">
           Elan Yerləşdir
         </a>
       </div>
 
-      <div class="about-price-card about-price-vip">
-        <div class="about-price-badge about-price-badge-vip">👑 VIP</div>
-        <div class="about-price-val">{{ vip_price }} <span>AZN</span></div>
-        <h3>VIP Elan</h3>
-        <ul>
-          <li><i class="fas fa-check"></i> 30 gün həmişə <strong>birinci</strong></li>
-          <li><i class="fas fa-check"></i> 👑 VIP tacı işarəsi</li>
-          <li><i class="fas fa-check"></i> Ayrıca VIP bölməsində göstərilir</li>
-          <li><i class="fas fa-check"></i> Elan müddəti 30 günə uzadılır</li>
-        </ul>
-        <a href="{{ url_for('create_listing') }}" class="btn btn-gold btn-lg" style="width:100%;justify-content:center;margin-top:auto">
-          VIP Al
-        </a>
-      </div>
-
-      <div class="about-price-card about-price-boost">
-        <div class="about-price-badge about-price-badge-boost">⬆️ Yüksəlt</div>
-        <div class="about-price-val">{{ boost_price }} <span>AZN</span></div>
-        <h3>Yüksəltmə</h3>
-        <ul>
-          <li><i class="fas fa-check"></i> {{ boost_days }} gün <strong>yuxarıda</strong> qalır</li>
-          <li><i class="fas fa-check"></i> ⬆️ Top işarəsi</li>
-          <li><i class="fas fa-check"></i> Kateqoriyada birinci sıra</li>
-          <li><i class="fas fa-check"></i> Köhnə elanlar üçün ideal</li>
-        </ul>
-        <a href="{{ url_for('create_listing') }}" class="btn btn-accent btn-lg" style="width:100%;justify-content:center;margin-top:auto;background:#e8650a;color:#fff">
-          Yüksəlt
-        </a>
-      </div>
-
     </div>
-    <p class="about-pay-note">
-      <i class="fas fa-credit-card"></i>
-      Ödəniş kart köçürməsi ilə qəbul edilir. Köçürmədən sonra admin 24 saat ərzində aktivləşdirir.
-    </p>
   </section>
 
   <!-- ── QAYDALAR ───────────────────────────────────────────── -->
@@ -247,7 +213,7 @@
           Elan vermək pulsuzdurmu? <i class="fas fa-chevron-down"></i>
         </button>
         <div class="faq-a">
-          Bəli, tamamilə pulsuzdur. Qeydiyyat, elan yerləşdirmək və bütün əsas funksiyalar 100% pulsuzdur. Yalnız elanınızı daha çox insana göstərmək istəsəniz VIP ({{ vip_price }} AZN) və ya Yüksəltmə ({{ boost_price }} AZN) xidmətlərindən istifadə edə bilərsiniz.
+          Bəli, tamamilə pulsuzdur. Qeydiyyat, elan yerləşdirmək və bütün funksiyalar 100% pulsuzdur — heç bir gizli ödəniş yoxdur.
         </div>
       </div>
 
@@ -256,26 +222,16 @@
           Elan nə qədər müddət aktiv qalır? <i class="fas fa-chevron-down"></i>
         </button>
         <div class="faq-a">
-          Pulsuz elanlar 30 gün aktiv qalır. Müddət bitdikdə elan avtomatik silinir. VIP elan satın aldığınızda müddəti 30 gün uzadılır — beləliklə VIP elan da 30 gün ərzində həmişə birinci sırada görünür.
+          Elanlar 30 gün aktiv qalır. Müddət bitdikdə elan avtomatik silinir. İstədiyiniz vaxt elanı yeniləyə və ya yenidən yerləşdirə bilərsiniz.
         </div>
       </div>
 
       <div class="faq-item">
         <button class="faq-q" onclick="toggleFaq(this)">
-          VIP ilə Yüksəltmə arasındakı fərq nədir? <i class="fas fa-chevron-down"></i>
+          Satıcı ilə necə əlaqə saxlayım? <i class="fas fa-chevron-down"></i>
         </button>
         <div class="faq-a">
-          <strong>VIP ({{ vip_price }} AZN, 30 gün):</strong> Elanınız ayrıca VIP bölməsində göstərilir və kateqoriyada daim birinci yerdə qalır. Üzərində 👑 işarəsi olur.<br><br>
-          <strong>Yüksəltmə ({{ boost_price }} AZN, {{ boost_days }} gün):</strong> Elanınız {{ boost_days }} gün müddətinə kateqoriya siyahısının yuxarısına çıxarılır. Köhnəlmiş elanları yenidən öndə tutmaq üçün idealdır.
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggleFaq(this)">
-          Ödənişi necə etməliyəm? <i class="fas fa-chevron-down"></i>
-        </button>
-        <div class="faq-a">
-          Elanınızın səhifəsindən VIP və ya Yüksəltmə düyməsinə basın, göstərilən kart nömrəsinə məbləği köçürün. Admin ödənişi yoxladıqdan sonra 24 saat ərzində xidmət aktivləşir.
+          Elan səhifəsindən satıcıya birbaşa zəng edə, WhatsApp yaza və ya sayt daxili mesaj göndərə bilərsiniz.
         </div>
       </div>
 
@@ -512,8 +468,6 @@
   gap: 16px;
   position: relative;
 }
-.about-price-vip { border-color: #f9a825; box-shadow: 0 0 24px rgba(249,168,37,.2); }
-.about-price-boost { border-color: #e8650a; }
 .about-price-badge {
   display: inline-block;
   background: var(--surface);
@@ -524,8 +478,6 @@
   font-weight: 700;
   width: fit-content;
 }
-.about-price-badge-vip { background: rgba(249,168,37,.15); border-color: rgba(249,168,37,.4); color: #f9a825; }
-.about-price-badge-boost { background: rgba(232,101,10,.15); border-color: rgba(232,101,10,.4); color: #e8650a; }
 .about-price-val {
   font-size: 48px;
   font-weight: 800;
@@ -551,16 +503,6 @@
   color: var(--text-muted);
 }
 .about-price-card li .fa-check { color: #a6e3a1; font-size: 12px; }
-.about-pay-note {
-  margin-top: 16px;
-  text-align: center;
-  font-size: 14px;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
 
 /* ── Rules ── */
 .about-rules {

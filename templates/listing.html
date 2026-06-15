@@ -21,8 +21,6 @@
         <div class="gallery-main">
           <img src="{{ url_for('uploaded_file', filename=listing.images[0]) }}"
                alt="{{ listing.title }}" id="mainImg" class="gallery-main-img">
-          {% if listing.is_vip %}<span class="badge-vip large">👑 VIP</span>{% endif %}
-          {% if listing.is_boosted %}<span class="badge-boost large">⬆️ Top</span>{% endif %}
         </div>
         {% if listing.images | length > 1 %}
         <div class="gallery-thumbs">
@@ -57,16 +55,6 @@
           <a href="{{ url_for('edit_listing', lid=listing.id) }}" class="btn btn-outline">
             <i class="fas fa-edit"></i> Düzəliş Et
           </a>
-          {% if not listing.is_vip %}
-          <a href="{{ url_for('vip_order', lid=listing.id) }}" class="btn btn-gold">
-            👑 VIP Yap — {{ vip_price }} AZN
-          </a>
-          {% endif %}
-          {% if not listing.is_boosted %}
-          <a href="{{ url_for('boost_order', lid=listing.id) }}" class="btn btn-accent" style="background:#e8650a;color:#fff">
-            ⬆️ Yüksəlt — {{ boost_price }} AZN
-          </a>
-          {% endif %}
           <form method="post" action="{{ url_for('delete_listing', lid=listing.id) }}"
                 onsubmit="return confirm('Elanı silmək istədiyinizə əminsiniz?')">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

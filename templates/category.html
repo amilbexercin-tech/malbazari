@@ -46,28 +46,10 @@
           {% endif %}
         </form>
       </div>
-
-      <div class="promo-sidebar">
-        <div class="promo-s-icon">👑</div>
-        <h4>VIP Elan</h4>
-        <p>Həmişə birinci olun!</p>
-        <strong>{{ vip_price }} AZN / 30 gün</strong>
-        <a href="{{ url_for('create_listing') }}" class="btn btn-gold btn-sm mt-2">Elan Ver</a>
-      </div>
     </aside>
 
     <!-- MAIN -->
     <main class="main-content">
-      <!-- VIP -->
-      {% if vips %}
-      <div class="vip-section mb-4">
-        <div class="vip-header"><span>👑</span> VIP Elanlar</div>
-        <div class="listings-grid">
-          {% for l in vips %}{% include 'partials/listing_card.html' %}{% endfor %}
-        </div>
-      </div>
-      {% endif %}
-
       <!-- Regular -->
       {% if listings %}
       <div class="listings-grid">

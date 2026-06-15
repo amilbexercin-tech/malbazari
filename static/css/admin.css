@@ -98,8 +98,6 @@ img{max-width:100%}
 .status-pending{background:rgba(255,152,0,.15);color:#ffc400}
 .status-approved{background:rgba(0,200,83,.15);color:#00e676}
 .status-rejected{background:rgba(244,67,54,.15);color:#ff5252}
-.badge-vip-sm{background:rgba(255,215,0,.2);color:var(--a-gold);padding:2px 8px;border-radius:50px;font-size:11px;font-weight:700}
-.badge-boost-sm{background:rgba(255,152,0,.2);color:var(--a-warn);padding:2px 8px;border-radius:50px;font-size:11px;font-weight:700}
 .role-badge{padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px}
 .role-admin{background:rgba(61,90,254,.2);color:#7986cb}
 .role-user{background:rgba(255,255,255,.08);color:var(--a-muted)}

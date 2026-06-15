@@ -64,8 +64,6 @@ TRANSLATIONS = {
     'footer_about':  {'az': 'Azərbaycanda mal-qara, quşçuluq və arıçılıq məhsullarının alqı-satqısı üçün ən etibarlı platforma.', 'ru': 'Самая надёжная площадка для купли-продажи скота, птицы и продуктов пчеловодства в Азербайджане.', 'en': 'The most trusted platform for buying and selling cattle, poultry and beekeeping products in Azerbaijan.'},
     'services':      {'az': 'Xidmətlər', 'ru': 'Услуги', 'en': 'Services'},
     'contact':       {'az': 'Əlaqə', 'ru': 'Контакты', 'en': 'Contact'},
-    'vip_listing':   {'az': 'VIP Elan', 'ru': 'VIP объявление', 'en': 'VIP Listing'},
-    'boost':         {'az': 'Yüksəltmə', 'ru': 'Поднятие', 'en': 'Boost'},
     'search_word':   {'az': 'Axtarış', 'ru': 'Поиск', 'en': 'Search'},
     'about_us':      {'az': 'Haqqımızda', 'ru': 'О нас', 'en': 'About Us'},
     'rights':        {'az': 'Bütün hüquqlar qorunur', 'ru': 'Все права защищены', 'en': 'All rights reserved'},

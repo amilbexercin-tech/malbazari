@@ -1,4 +1,4 @@
-<article class="listing-card {% if l.is_vip %}listing-vip{% endif %} {% if l.is_boosted %}listing-boosted{% endif %}">
+<article class="listing-card">
   <a href="{{ url_for('listing_detail', lid=l.id) }}" class="card-img-wrap">
     {% if l.images and l.images|length > 0 %}
     <img src="{{ url_for('uploaded_file', filename=l.images[0]) }}" alt="{{ l.title }}" loading="lazy">
@@ -8,8 +8,6 @@
       <span>{{ cat.get('icon','📋') }}</span>
     </div>
     {% endif %}
-    {% if l.is_vip %}<span class="badge-vip">👑 VIP</span>{% endif %}
-    {% if l.is_boosted %}<span class="badge-boost">⬆️ Top</span>{% endif %}
   </a>
   {% if current_user %}
   <form method="post" action="{{ url_for('toggle_favorite', lid=l.id) }}" class="fav-form">

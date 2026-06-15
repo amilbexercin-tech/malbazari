@@ -73,10 +73,6 @@ REGIONS = [
     'Siyəzən','Tovuz','Ucar','Xaçmaz','Xızı','Zaqatala','Zərdab'
 ]
 
-VIP_PRICE = 25
-VIP_DAYS = 30
-BOOST_PRICE = 5
-BOOST_DAYS = 3
 FREE_DAYS = 30
 MAX_IMAGES = 5
 
