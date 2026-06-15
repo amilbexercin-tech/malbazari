@@ -196,3 +196,33 @@ def test_otp_wrong_code(client):
     u = database.get_user_by_phone("+994500000014")
     # Yanlış kod (təsadüf üstündə deyil) → təsdiqlənməmiş qalır
     assert u["phone_verified"] == 0
+
+
+# ─── Admin 2FA (TOTP) ─────────────────────────────────────────
+
+def test_admin_login_requires_2fa(client):
+    import pyotp
+    from config import ADMIN_PHONE, ADMIN_PASSWORD
+    # Düzgün parol → 2FA quraşdırma səhifəsinə yönəlir (ilk dəfə)
+    r = client.post("/giris", data={"phone": ADMIN_PHONE, "password": ADMIN_PASSWORD})
+    assert r.status_code == 302
+    assert "/2fa" in r.headers["Location"]
+    # Admin hələ tam daxil olmayıb
+    assert client.get("/admin/").status_code == 302
+    # Quraşdırma sirrini al, kodu hesabla, təsdiqlə
+    client.get("/2fa-qur")
+    with client.session_transaction() as s:
+        secret = s["totp_setup_secret"]
+    code = pyotp.TOTP(secret).now()
+    client.post("/2fa-qur", data={"code": code}, follow_redirects=True)
+    # İndi admin panelə giriş var
+    assert client.get("/admin/").status_code == 200
+
+
+def test_admin_wrong_2fa_blocked(client):
+    from config import ADMIN_PHONE, ADMIN_PASSWORD
+    client.post("/giris", data={"phone": ADMIN_PHONE, "password": ADMIN_PASSWORD})
+    client.get("/2fa-qur")
+    client.post("/2fa-qur", data={"code": "000000"}, follow_redirects=True)
+    # Yanlış kod → admin panel hələ bağlıdır
+    assert client.get("/admin/").status_code == 302

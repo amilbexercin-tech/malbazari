@@ -1,9 +1,13 @@
 import os
+import io
 import json
 import time
+import base64
 import random
 import secrets
 import threading
+import pyotp
+import qrcode
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import (Flask, render_template, request, redirect, url_for,
@@ -101,6 +105,23 @@ def _start_otp(phone):
     session['otp_expires'] = time.time() + OTP_TTL_SECONDS
     sms.send_otp(phone, code)
     return code
+
+# ─── 2FA (TOTP) köməkçiləri ────────────────────────────────────────────────────
+
+def _qr_data_uri(text):
+    """Mətndən QR kod yaradıb data-URI (base64 PNG) qaytarır — səhifəyə yerləşdirmək üçün."""
+    img = qrcode.make(text)
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    return 'data:image/png;base64,' + base64.b64encode(buf.getvalue()).decode()
+
+def _finalize_login(user):
+    """2FA-dan sonra sessiyanı tam giriş halına gətirir."""
+    session['user_id'] = user['id']
+    session['username'] = user['username']
+    session['is_admin'] = bool(user['is_admin'])
+    for k in ('pending_2fa_uid', 'totp_setup_secret'):
+        session.pop(k, None)
 
 # PIL formatından etibarlı uzantıya xəritə — uzantı istifadəçinin adından deyil,
 # faylın əsl məzmunundan götürülür.
@@ -385,16 +406,74 @@ def login():
         password = request.form.get('password', '')
         user = db.get_user_by_phone(phone)
         if user and check_password_hash(user['password_hash'], password):
-            session['user_id'] = user['id']
-            session['username'] = user['username']
-            session['is_admin'] = bool(user['is_admin'])
-            flash(f'Xoş gəldiniz, {user["username"]}!', 'success')
             nxt = request.args.get('next')
+            # Adminlər üçün məcburi ikili doğrulama (2FA)
+            if user['is_admin']:
+                session.clear()
+                session['pending_2fa_uid'] = user['id']
+                if nxt and nxt.startswith('/'):
+                    session['post_login_next'] = nxt
+                if user['totp_secret']:
+                    return redirect(url_for('two_factor'))
+                return redirect(url_for('two_factor_setup'))
+            # Adi istifadəçi — birbaşa giriş
+            _finalize_login(user)
+            flash(f'Xoş gəldiniz, {user["username"]}!', 'success')
             if nxt and nxt.startswith('/'):
                 return redirect(nxt)
             return redirect(url_for('index'))
         flash('Nömrə və ya şifrə yanlışdır.', 'danger')
     return render_template('login.html')
+
+@app.route('/2fa', methods=['GET', 'POST'])
+@limiter.limit("10 per 5 minutes", methods=['POST'])
+def two_factor():
+    uid = session.get('pending_2fa_uid')
+    if not uid:
+        return redirect(url_for('login'))
+    user = db.get_user_by_id(uid)
+    if not user or not user['totp_secret']:
+        return redirect(url_for('two_factor_setup'))
+    if request.method == 'POST':
+        code = request.form.get('code', '').strip()
+        if pyotp.TOTP(user['totp_secret']).verify(code, valid_window=1):
+            nxt = session.get('post_login_next')
+            _finalize_login(user)
+            session.pop('post_login_next', None)
+            flash(f'Xoş gəldiniz, {user["username"]}!', 'success')
+            return redirect(nxt if nxt and nxt.startswith('/') else url_for('admin_dashboard'))
+        flash('Kod yanlışdır.', 'danger')
+    return render_template('two_factor.html')
+
+@app.route('/2fa-qur', methods=['GET', 'POST'])
+@limiter.limit("10 per 5 minutes", methods=['POST'])
+def two_factor_setup():
+    uid = session.get('pending_2fa_uid')
+    if not uid:
+        return redirect(url_for('login'))
+    user = db.get_user_by_id(uid)
+    if not user:
+        return redirect(url_for('login'))
+    if user['totp_secret']:
+        return redirect(url_for('two_factor'))
+    # Sirr təsdiqlənənə qədər sessiyada saxlanılır
+    secret = session.get('totp_setup_secret')
+    if not secret:
+        secret = pyotp.random_base32()
+        session['totp_setup_secret'] = secret
+    if request.method == 'POST':
+        code = request.form.get('code', '').strip()
+        if pyotp.TOTP(secret).verify(code, valid_window=1):
+            db.set_totp_secret(user['id'], secret)
+            nxt = session.get('post_login_next')
+            _finalize_login(user)
+            session.pop('post_login_next', None)
+            flash('İkili doğrulama aktivləşdi! ✅', 'success')
+            return redirect(nxt if nxt and nxt.startswith('/') else url_for('admin_dashboard'))
+        flash('Kod yanlışdır, yenidən cəhd edin.', 'danger')
+    uri = pyotp.totp.TOTP(secret).provisioning_uri(name=user['phone'],
+                                                   issuer_name='MalBazari.biz')
+    return render_template('two_factor_setup.html', qr=_qr_data_uri(uri), secret=secret)
 
 @app.route('/cixis')
 def logout():

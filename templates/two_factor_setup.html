@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}2FA quraşdırma — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-bg"></div>
+  <div class="auth-card" style="max-width:440px">
+    <div class="auth-logo">🔐</div>
+    <h1>İkili Doğrulamanı Qur</h1>
+    <p class="auth-sub">Admin hesabı üçün bir dəfəlik quraşdırma</p>
+
+    <ol class="setup-steps">
+      <li><strong>Google Authenticator</strong> (və ya Authy) tətbiqini telefonunuza yükləyin</li>
+      <li>Tətbiqdə <strong>+</strong> → <strong>QR kodu skan et</strong></li>
+      <li>Aşağıdakı QR kodu skan edin</li>
+      <li>Tətbiqdə görünən 6 rəqəmli kodu daxil edin</li>
+    </ol>
+
+    <div class="qr-box">
+      <img src="{{ qr }}" alt="QR kod" width="200" height="200">
+    </div>
+    <p class="qr-secret">
+      Skan edə bilmirsiniz? Əl ilə açar:<br>
+      <code>{{ secret }}</code>
+    </p>
+
+    <form method="post" class="auth-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label><i class="fas fa-shield-halved"></i> Tətbiqdəki kod</label>
+        <input type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
+               placeholder="••••••" required autofocus
+               style="text-align:center;font-size:24px;letter-spacing:8px">
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">
+        <i class="fas fa-check"></i> Aktivləşdir
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <a href="{{ url_for('logout') }}">İmtina et</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

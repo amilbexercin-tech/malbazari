@@ -115,6 +115,7 @@ def init_db():
     # ── Mövcud bazalar üçün miqrasiya: çatışmayan sütunları əlavə et ──
     migrations = [
         ("users", "phone_verified", "INTEGER DEFAULT 0"),
+        ("users", "totp_secret", "TEXT"),
         ("listings", "weight_kg", "REAL"),
         ("listings", "purpose", "TEXT"),
         ("listings", "breed", "TEXT"),
@@ -353,6 +354,11 @@ def delete_user(uid):
 def set_phone_verified(uid):
     conn = get_db()
     conn.execute("UPDATE users SET phone_verified=1 WHERE id=?", (uid,))
+    conn.commit(); conn.close()
+
+def set_totp_secret(uid, secret):
+    conn = get_db()
+    conn.execute("UPDATE users SET totp_secret=? WHERE id=?", (secret, uid))
     conn.commit(); conn.close()
 
 # ─── Settings ────────────────────────────────────────────────────────────────
