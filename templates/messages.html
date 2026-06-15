@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Mesajlar — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+  <h1 class="page-title"><i class="fas fa-comments"></i> Mesajlar</h1>
+
+  {% if conversations %}
+  <div class="convo-list">
+    {% for c in conversations %}
+    <a href="{{ url_for('conversation', lid=c.listing_id or 0, other_id=c.other_id) }}"
+       class="convo-item {% if c.unread %}convo-unread{% endif %}">
+      <i class="fas fa-user-circle convo-avatar"></i>
+      <div class="convo-body">
+        <div class="convo-top">
+          <span class="convo-name">{{ c.other_name or 'İstifadəçi' }}</span>
+          <span class="convo-time">{{ c.created_at[:16] }}</span>
+        </div>
+        {% if c.listing_title %}
+        <div class="convo-listing"><i class="fas fa-tag"></i> {{ c.listing_title | truncate(40) }}</div>
+        {% endif %}
+        <div class="convo-last">{{ c.body | truncate(60) }}</div>
+      </div>
+      {% if c.unread %}<span class="convo-badge">{{ c.unread }}</span>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">💬</div>
+    <h3>Hələ mesajınız yoxdur</h3>
+    <p>Bir elanı bəyəndinizsə, satıcıya mesaj yaza bilərsiniz.</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Elanlara bax</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

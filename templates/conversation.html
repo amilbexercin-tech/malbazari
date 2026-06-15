@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}{{ other.username }} ilə söhbət — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+  <a href="{{ url_for('messages_inbox') }}" class="back-link"><i class="fas fa-arrow-left"></i> Bütün mesajlar</a>
+
+  <div class="chat-card">
+    <div class="chat-header">
+      <i class="fas fa-user-circle"></i>
+      <div>
+        <div class="chat-name">{{ other.username }}</div>
+        {% if listing %}
+        <a href="{{ url_for('listing_detail', lid=listing.id) }}" class="chat-listing">
+          <i class="fas fa-tag"></i> {{ listing.title | truncate(45) }}
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="chat-body" id="chatBody">
+      {% if messages %}
+      {% for m in messages %}
+      <div class="chat-msg {% if m.sender_id == current_user.id %}chat-msg-me{% else %}chat-msg-them{% endif %}">
+        <div class="chat-bubble">{{ m.body }}</div>
+        <div class="chat-meta">{{ m.created_at[11:16] }}</div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <p class="chat-empty">Söhbətə başlayın — ilk mesajı yazın.</p>
+      {% endif %}
+    </div>
+
+    <form method="post" action="{{ url_for('send_message', lid=lid, receiver_id=other_id) }}" class="chat-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="text" name="body" placeholder="Mesaj yazın..." autocomplete="off" required maxlength="2000">
+      <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
+    </form>
+  </div>
+</div>
+
+<script>
+// Söhbəti ən aşağıya sürüşdür
+(function(){ var b=document.getElementById('chatBody'); if(b) b.scrollTop=b.scrollHeight; })();
+</script>
+{% endblock %}

@@ -125,7 +125,48 @@
           <i class="fab fa-whatsapp"></i> WhatsApp
         </a>
         {% endif %}
+
+        {% if current_user and current_user.id != listing.user_id %}
+        <a href="{{ url_for('conversation', lid=listing.id, other_id=listing.user_id) }}" class="btn btn-primary btn-full">
+          <i class="fas fa-comment-dots"></i> Satıcıya mesaj yaz
+        </a>
+        <form method="post" action="{{ url_for('toggle_favorite', lid=listing.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="next" value="{{ request.path }}">
+          <button type="submit" class="btn btn-outline btn-full">
+            {% if listing.id in favorite_ids %}
+            <i class="fas fa-heart" style="color:#e63946"></i> Seçilmişlərdən çıxar
+            {% else %}
+            <i class="far fa-heart"></i> Seçilmişlərə əlavə et
+            {% endif %}
+          </button>
+        </form>
+        {% elif not current_user %}
+        <a href="{{ url_for('login', next=request.path) }}" class="btn btn-primary btn-full">
+          <i class="fas fa-comment-dots"></i> Mesaj yazmaq üçün daxil olun
+        </a>
+        {% endif %}
       </div>
+
+      {% if current_user and current_user.id != listing.user_id %}
+      <div class="report-box">
+        <button type="button" class="report-toggle" onclick="document.getElementById('reportForm').classList.toggle('open')">
+          <i class="fas fa-flag"></i> Şikayət et
+        </button>
+        <form method="post" action="{{ url_for('report_listing', lid=listing.id) }}" id="reportForm" class="report-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <select name="reason" required>
+            <option value="">Səbəb seçin...</option>
+            <option value="Saxta və ya yanlış məlumat">Saxta / yanlış məlumat</option>
+            <option value="Dublikat elan">Dublikat elan</option>
+            <option value="Qadağan olunmuş məhsul">Qadağan olunmuş məhsul</option>
+            <option value="Spam / reklam">Spam / reklam</option>
+            <option value="Digər">Digər</option>
+          </select>
+          <button type="submit" class="btn btn-danger btn-sm">Göndər</button>
+        </form>
+      </div>
+      {% endif %}
 
       <!-- Safety tips -->
       <div class="safety-card">

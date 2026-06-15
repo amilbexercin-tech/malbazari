@@ -33,6 +33,13 @@
         <i class="fas fa-plus"></i> Elan Əlavə Et
       </a>
       {% if current_user %}
+        <a href="{{ url_for('messages_inbox') }}" class="nav-icon-btn" title="Mesajlar" aria-label="Mesajlar">
+          <i class="fas fa-comment-dots"></i>
+          {% if unread_messages %}<span class="nav-icon-badge">{{ unread_messages }}</span>{% endif %}
+        </a>
+        <a href="{{ url_for('favorites') }}" class="nav-icon-btn" title="Seçilmişlər" aria-label="Seçilmişlər">
+          <i class="fas fa-heart"></i>
+        </a>
         <div class="user-menu" id="userMenu">
           <button class="user-avatar" onclick="toggleUserMenu()">
             <i class="fas fa-user-circle"></i>
@@ -41,6 +48,8 @@
           </button>
           <div class="user-dropdown" id="userDropdown">
             <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Profilim</a>
+            <a href="{{ url_for('messages_inbox') }}"><i class="fas fa-comment-dots"></i> Mesajlar{% if unread_messages %} ({{ unread_messages }}){% endif %}</a>
+            <a href="{{ url_for('favorites') }}"><i class="fas fa-heart"></i> Seçilmişlər</a>
             {% if current_user.is_admin %}
             <a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-shield-alt"></i> Admin Panel</a>
             {% endif %}
@@ -68,6 +77,8 @@
       <div class="mobile-divider"></div>
       {% if current_user %}
         <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Profilim</a>
+        <a href="{{ url_for('messages_inbox') }}"><i class="fas fa-comment-dots"></i> Mesajlar{% if unread_messages %} ({{ unread_messages }}){% endif %}</a>
+        <a href="{{ url_for('favorites') }}"><i class="fas fa-heart"></i> Seçilmişlər</a>
         {% if current_user.is_admin %}
         <a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-shield-alt"></i> Admin Panel</a>
         {% endif %}

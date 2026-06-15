@@ -11,6 +11,16 @@
     {% if l.is_vip %}<span class="badge-vip">👑 VIP</span>{% endif %}
     {% if l.is_boosted %}<span class="badge-boost">⬆️ Top</span>{% endif %}
   </a>
+  {% if current_user %}
+  <form method="post" action="{{ url_for('toggle_favorite', lid=l.id) }}" class="fav-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="next" value="{{ request.full_path }}">
+    <button type="submit" class="fav-btn {% if l.id in favorite_ids %}fav-on{% endif %}"
+            title="Seçilmişlərə əlavə et" aria-label="Seçilmişlər">
+      <i class="{% if l.id in favorite_ids %}fas{% else %}far{% endif %} fa-heart"></i>
+    </button>
+  </form>
+  {% endif %}
   <div class="card-body">
     <div class="card-meta">
       <span class="card-cat">{{ l.subcategory }}</span>

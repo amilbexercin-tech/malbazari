@@ -1,0 +1,67 @@
+{% extends 'admin/base.html' %}
+{% block title %}Şikayətlər{% endblock %}
+{% block page_title %}🚩 Şikayətlər{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+  <div class="section-head">
+    <h2>Şikayətlər ({{ total }})</h2>
+    <div class="head-filters">
+      <a href="?status=" class="filter-chip {% if not status %}active{% endif %}">Hamısı</a>
+      <a href="?status=pending" class="filter-chip {% if status == 'pending' %}active{% endif %}">Gözləyən</a>
+      <a href="?status=resolved" class="filter-chip {% if status == 'resolved' %}active{% endif %}">Həll edilmiş</a>
+    </div>
+  </div>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr><th>#</th><th>Elan</th><th>Səbəb</th><th>Şikayətçi</th><th>Status</th><th>Tarix</th><th>Əməliyyat</th></tr>
+      </thead>
+      <tbody>
+        {% for r in reports %}
+        <tr>
+          <td>{{ r.id }}</td>
+          <td>
+            {% if r.listing_id %}
+            <a href="{{ url_for('listing_detail', lid=r.listing_id) }}" target="_blank">
+              {{ (r.listing_title or '—') | truncate(30) }}
+            </a>
+            {% else %}—{% endif %}
+          </td>
+          <td>{{ r.reason | truncate(60) }}</td>
+          <td>{{ r.reporter_name or '—' }}</td>
+          <td>
+            <span class="status-badge status-{{ 'pending' if r.status == 'pending' else 'approved' }}">
+              {% if r.status == 'pending' %}Gözləyir{% else %}Həll edildi{% endif %}
+            </span>
+          </td>
+          <td>{{ r.created_at[:16] }}</td>
+          <td>
+            {% if r.status == 'pending' %}
+            <form method="post" action="{{ url_for('admin_resolve_report', rid=r.id) }}" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-success btn-xs">✓ Həll et</button>
+            </form>
+            {% if r.listing_id %}
+            <form method="post" action="{{ url_for('admin_delete_listing', lid=r.listing_id) }}"
+                  onsubmit="return confirm('Elan silinsin?')" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-danger btn-xs">Elanı sil</button>
+            </form>
+            {% endif %}
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if pages > 1 %}
+  <div class="pagination">
+    {% for p in range(1, pages+1) %}
+    <a href="?status={{ status }}&page={{ p }}" class="page-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

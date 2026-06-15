@@ -39,6 +39,10 @@
         <i class="fas fa-shopping-cart"></i> Sifarişlər
         {% if stats and stats.pending_orders %}<span class="nav-badge badge-warn">{{ stats.pending_orders }}</span>{% endif %}
       </a>
+      <a href="{{ url_for('admin_reports') }}" class="nav-item {% if request.endpoint == 'admin_reports' %}active{% endif %}">
+        <i class="fas fa-flag"></i> Şikayətlər
+        {% if stats and stats.pending_reports %}<span class="nav-badge badge-warn">{{ stats.pending_reports }}</span>{% endif %}
+      </a>
       <div class="nav-label">Sistem</div>
       <a href="{{ url_for('admin_settings') }}" class="nav-item {% if request.endpoint == 'admin_settings' %}active{% endif %}">
         <i class="fas fa-cog"></i> Parametrlər

@@ -75,6 +75,35 @@ def init_db():
         user_id INTEGER
     )''')
 
+    c.execute('''CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sender_id INTEGER NOT NULL,
+        receiver_id INTEGER NOT NULL,
+        listing_id INTEGER,
+        body TEXT NOT NULL,
+        is_read INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now'))
+    )''')
+    c.execute("CREATE INDEX IF NOT EXISTS idx_msg_receiver ON messages(receiver_id, is_read)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_msg_thread ON messages(listing_id, sender_id, receiver_id)")
+
+    c.execute('''CREATE TABLE IF NOT EXISTS favorites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        listing_id INTEGER NOT NULL,
+        created_at TEXT DEFAULT (datetime('now')),
+        UNIQUE(user_id, listing_id)
+    )''')
+
+    c.execute('''CREATE TABLE IF NOT EXISTS reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        reporter_id INTEGER,
+        listing_id INTEGER NOT NULL,
+        reason TEXT NOT NULL,
+        status TEXT DEFAULT 'pending',
+        created_at TEXT DEFAULT (datetime('now'))
+    )''')
+
     defaults = [
         ('site_name', 'MalBazari.biz'),
         ('card_number', ''),
@@ -136,6 +165,9 @@ def delete_listing(lid):
         except Exception:
             pass
     conn.execute("DELETE FROM orders WHERE listing_id=?", (lid,))
+    conn.execute("DELETE FROM favorites WHERE listing_id=?", (lid,))
+    conn.execute("DELETE FROM reports WHERE listing_id=?", (lid,))
+    conn.execute("DELETE FROM messages WHERE listing_id=?", (lid,))
     conn.execute("DELETE FROM listings WHERE id=?", (lid,))
     conn.commit(); conn.close()
     # Delete uploaded images from disk
@@ -388,6 +420,154 @@ def get_edit_history(filename=None, limit=20):
     conn.close()
     return rows
 
+# ─── Messages ────────────────────────────────────────────────────────────────
+
+def send_message(sender_id, receiver_id, listing_id, body):
+    conn = get_db()
+    conn.execute("""INSERT INTO messages(sender_id,receiver_id,listing_id,body)
+                    VALUES(?,?,?,?)""", (sender_id, receiver_id, listing_id, body))
+    conn.commit(); conn.close()
+
+
+def get_conversations(user_id):
+    """İstifadəçinin bütün söhbətləri — hər (qarşı tərəf + elan) cütü üçün son mesaj."""
+    conn = get_db()
+    rows = conn.execute("""
+        SELECT m.*,
+            (CASE WHEN m.sender_id=? THEN m.receiver_id ELSE m.sender_id END) AS other_id,
+            u.username AS other_name,
+            l.title AS listing_title, l.status AS listing_status,
+            (SELECT COUNT(*) FROM messages mm
+               WHERE mm.receiver_id=? AND mm.is_read=0
+                 AND mm.sender_id=(CASE WHEN m.sender_id=? THEN m.receiver_id ELSE m.sender_id END)
+                 AND IFNULL(mm.listing_id,0)=IFNULL(m.listing_id,0)) AS unread
+        FROM messages m
+        LEFT JOIN users u ON u.id=(CASE WHEN m.sender_id=? THEN m.receiver_id ELSE m.sender_id END)
+        LEFT JOIN listings l ON l.id=m.listing_id
+        WHERE m.id IN (
+            SELECT MAX(id) FROM messages
+            WHERE sender_id=? OR receiver_id=?
+            GROUP BY IFNULL(listing_id,0),
+                     (CASE WHEN sender_id=? THEN receiver_id ELSE sender_id END)
+        )
+        ORDER BY m.created_at DESC
+    """, (user_id, user_id, user_id, user_id, user_id, user_id, user_id)).fetchall()
+    conn.close()
+    return rows
+
+
+def get_conversation(user_id, other_id, listing_id):
+    conn = get_db()
+    rows = conn.execute("""SELECT m.*, u.username AS sender_name FROM messages m
+        LEFT JOIN users u ON u.id=m.sender_id
+        WHERE IFNULL(m.listing_id,0)=IFNULL(?,0)
+          AND ((m.sender_id=? AND m.receiver_id=?) OR (m.sender_id=? AND m.receiver_id=?))
+        ORDER BY m.created_at ASC""",
+        (listing_id, user_id, other_id, other_id, user_id)).fetchall()
+    conn.close()
+    return rows
+
+
+def mark_messages_read(user_id, other_id, listing_id):
+    conn = get_db()
+    conn.execute("""UPDATE messages SET is_read=1
+        WHERE receiver_id=? AND sender_id=? AND IFNULL(listing_id,0)=IFNULL(?,0)""",
+        (user_id, other_id, listing_id))
+    conn.commit(); conn.close()
+
+
+def count_unread(user_id):
+    conn = get_db()
+    n = conn.execute("SELECT COUNT(*) FROM messages WHERE receiver_id=? AND is_read=0",
+                     (user_id,)).fetchone()[0]
+    conn.close()
+    return n
+
+
+# ─── Favorites ───────────────────────────────────────────────────────────────
+
+def add_favorite(user_id, listing_id):
+    conn = get_db()
+    conn.execute("INSERT OR IGNORE INTO favorites(user_id,listing_id) VALUES(?,?)",
+                 (user_id, listing_id))
+    conn.commit(); conn.close()
+
+
+def remove_favorite(user_id, listing_id):
+    conn = get_db()
+    conn.execute("DELETE FROM favorites WHERE user_id=? AND listing_id=?",
+                 (user_id, listing_id))
+    conn.commit(); conn.close()
+
+
+def is_favorite(user_id, listing_id):
+    conn = get_db()
+    row = conn.execute("SELECT 1 FROM favorites WHERE user_id=? AND listing_id=?",
+                       (user_id, listing_id)).fetchone()
+    conn.close()
+    return row is not None
+
+
+def get_favorite_ids(user_id):
+    """İstifadəçinin seçdiyi elan id-ləri (kartlarda ürək işarəsi üçün) — set kimi."""
+    conn = get_db()
+    rows = conn.execute("SELECT listing_id FROM favorites WHERE user_id=?", (user_id,)).fetchall()
+    conn.close()
+    return {r['listing_id'] for r in rows}
+
+
+def get_favorites(user_id):
+    conn = get_db()
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    rows = conn.execute("""SELECT l.*, u.username FROM favorites f
+        JOIN listings l ON l.id=f.listing_id
+        LEFT JOIN users u ON u.id=l.user_id
+        WHERE f.user_id=? AND l.status='active' AND l.expires_at>?
+        ORDER BY f.created_at DESC""", (user_id, now)).fetchall()
+    conn.close()
+    return rows
+
+
+# ─── Reports ─────────────────────────────────────────────────────────────────
+
+def create_report(reporter_id, listing_id, reason):
+    conn = get_db()
+    conn.execute("INSERT INTO reports(reporter_id,listing_id,reason) VALUES(?,?,?)",
+                 (reporter_id, listing_id, reason))
+    conn.commit(); conn.close()
+
+
+def get_reports(page=1, per_page=30, status=None):
+    conn = get_db()
+    conds = ["1=1"]; params = []
+    if status:
+        conds.append("r.status=?"); params.append(status)
+    where = " AND ".join(conds)
+    offset = (page-1)*per_page
+    total = conn.execute(f"SELECT COUNT(*) FROM reports r WHERE {where}", params).fetchone()[0]
+    rows = conn.execute(f"""SELECT r.*, u.username AS reporter_name,
+            l.title AS listing_title FROM reports r
+        LEFT JOIN users u ON u.id=r.reporter_id
+        LEFT JOIN listings l ON l.id=r.listing_id
+        WHERE {where} ORDER BY r.created_at DESC LIMIT ? OFFSET ?""",
+        params+[per_page, offset]).fetchall()
+    conn.close()
+    return rows, total
+
+
+def resolve_report(rid):
+    conn = get_db()
+    conn.execute("UPDATE reports SET status='resolved' WHERE id=?", (rid,))
+    conn.commit(); conn.close()
+
+
+def count_pending_reports():
+    conn = get_db()
+    n = conn.execute("SELECT COUNT(*) FROM reports WHERE status='pending'").fetchone()[0]
+    conn.close()
+    return n
+
+
 # ─── Stats ───────────────────────────────────────────────────────────────────
 
 def get_stats():
@@ -400,6 +580,7 @@ def get_stats():
         'total_users': conn.execute("SELECT COUNT(*) FROM users WHERE is_admin=0").fetchone()[0],
         'today_listings': conn.execute("SELECT COUNT(*) FROM listings WHERE date(created_at)=?", (today,)).fetchone()[0],
         'pending_orders': conn.execute("SELECT COUNT(*) FROM orders WHERE status='pending'").fetchone()[0],
+        'pending_reports': conn.execute("SELECT COUNT(*) FROM reports WHERE status='pending'").fetchone()[0],
         'total_revenue': conn.execute("SELECT COALESCE(SUM(amount),0) FROM orders WHERE status='approved'").fetchone()[0],
         'today_revenue': conn.execute("SELECT COALESCE(SUM(amount),0) FROM orders WHERE status='approved' AND date(created_at)=?", (today,)).fetchone()[0],
     }

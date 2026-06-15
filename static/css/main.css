@@ -721,3 +721,72 @@ input,select,textarea{font-family:inherit}
   .auth-card{padding:28px 20px}
   .page-content{padding:20px 0 40px}
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Mesajlaşma, Favoritlər, Şikayət — yeni komponentlər
+   ═══════════════════════════════════════════════════════════ */
+
+/* Başlıqlar */
+.page-title{font-size:26px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:10px}
+.page-sub{color:var(--text-muted);margin-bottom:20px;font-size:14px}
+.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--text-muted);font-weight:600;margin-bottom:16px;font-size:14px}
+.back-link:hover{color:var(--primary)}
+
+/* Navbar ikon düymələri (mesaj/favorit) */
+.nav-icon-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;color:var(--text-muted);background:var(--surface2);transition:var(--transition)}
+.nav-icon-btn:hover{background:var(--primary);color:#fff}
+.nav-icon-badge{position:absolute;top:-2px;right:-2px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;border-radius:50px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--surface)}
+
+/* Favorit ürək (kartda) */
+.listing-card{position:relative}
+.fav-form{position:absolute;top:10px;right:10px;z-index:3}
+.fav-btn{width:36px;height:36px;border:none;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:var(--shadow-sm);color:#e63946;font-size:15px;display:flex;align-items:center;justify-content:center;transition:var(--transition)}
+.fav-btn:hover{transform:scale(1.12);background:#fff}
+.fav-btn.fav-on{background:#e63946;color:#fff}
+
+/* Söhbət siyahısı (inbox) */
+.convo-list{display:flex;flex-direction:column;gap:10px}
+.convo-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);transition:var(--transition)}
+.convo-item:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.convo-unread{border-color:var(--primary-light);background:#f0f7f2}
+.convo-avatar{font-size:40px;color:var(--text-light)}
+.convo-body{flex:1;min-width:0}
+.convo-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.convo-name{font-weight:700}
+.convo-time{font-size:12px;color:var(--text-light);white-space:nowrap}
+.convo-listing{font-size:12px;color:var(--accent);margin:2px 0}
+.convo-last{font-size:14px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.convo-badge{background:var(--accent);color:#fff;font-size:12px;font-weight:700;min-width:22px;height:22px;border-radius:50px;display:flex;align-items:center;justify-content:center;padding:0 6px}
+
+/* Söhbət (chat) */
+.chat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;max-width:720px;height:70vh}
+.chat-header{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.chat-header>i{font-size:34px;color:var(--text-light)}
+.chat-name{font-weight:700}
+.chat-listing{font-size:13px;color:var(--accent)}
+.chat-body{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.chat-empty{text-align:center;color:var(--text-light);margin:auto}
+.chat-msg{display:flex;flex-direction:column;max-width:75%}
+.chat-msg-me{align-self:flex-end;align-items:flex-end}
+.chat-msg-them{align-self:flex-start;align-items:flex-start}
+.chat-bubble{padding:10px 14px;border-radius:16px;font-size:14px;word-wrap:break-word;white-space:pre-wrap}
+.chat-msg-me .chat-bubble{background:var(--primary);color:#fff;border-bottom-right-radius:4px}
+.chat-msg-them .chat-bubble{background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:4px}
+.chat-meta{font-size:11px;color:var(--text-light);margin-top:3px}
+.chat-form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border);background:var(--surface)}
+.chat-form input{flex:1;padding:11px 14px;border:1px solid var(--border);border-radius:50px;outline:none}
+.chat-form input:focus{border-color:var(--primary-light)}
+.chat-form button{border-radius:50px;width:46px;flex-shrink:0}
+
+/* Şikayət qutusu */
+.report-box{margin-top:14px;text-align:center}
+.report-toggle{background:none;border:none;color:var(--text-light);font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.report-toggle:hover{color:#dc3545}
+.report-form{display:none;margin-top:12px;gap:8px;flex-direction:column;text-align:left;background:var(--surface2);padding:14px;border-radius:var(--radius-sm)}
+.report-form.open{display:flex}
+.report-form select{padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);outline:none}
+
+@media(max-width:600px){
+  .chat-card{height:75vh}
+  .chat-msg{max-width:85%}
+}

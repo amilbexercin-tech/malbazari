@@ -151,6 +151,8 @@ def inject_globals():
         'now': datetime.now(),
         'db_setting': db.get_setting,
         'stats': db.get_stats() if 'user_id' in session and session.get('is_admin') else None,
+        'unread_messages': db.count_unread(session['user_id']) if 'user_id' in session else 0,
+        'favorite_ids': db.get_favorite_ids(session['user_id']) if 'user_id' in session else set(),
     }
 
 # ─── Public Routes ───────────────────────────────────────────────────────────
@@ -361,6 +363,90 @@ def delete_listing(lid):
     flash('Elan silindi.', 'info')
     return redirect(url_for('profile'))
 
+# ─── Messaging ────────────────────────────────────────────────────────────────
+
+@app.route('/mesajlar')
+@login_required
+def messages_inbox():
+    convos = db.get_conversations(session['user_id'])
+    return render_template('messages.html', conversations=[dict(c) for c in convos])
+
+
+@app.route('/mesajlar/<int:lid>/<int:other_id>')
+@login_required
+def conversation(lid, other_id):
+    uid = session['user_id']
+    if other_id == uid:
+        abort(400)
+    listing = db.get_listing(lid)
+    other = db.get_user_by_id(other_id)
+    if not other:
+        abort(404)
+    db.mark_messages_read(uid, other_id, lid)
+    msgs = db.get_conversation(uid, other_id, lid)
+    return render_template('conversation.html',
+                           messages=[dict(m) for m in msgs],
+                           listing=dict(listing) if listing else None,
+                           other=dict(other), lid=lid, other_id=other_id)
+
+
+@app.route('/mesaj-gonder/<int:lid>/<int:receiver_id>', methods=['POST'])
+@login_required
+def send_message(lid, receiver_id):
+    uid = session['user_id']
+    body = request.form.get('body', '').strip()[:2000]
+    if receiver_id == uid:
+        flash('Özünüzə mesaj göndərə bilməzsiniz.', 'warning')
+        return redirect(url_for('listing_detail', lid=lid))
+    if not db.get_user_by_id(receiver_id):
+        abort(404)
+    if not body:
+        flash('Mesaj boş ola bilməz.', 'warning')
+        return redirect(url_for('conversation', lid=lid, other_id=receiver_id))
+    db.send_message(uid, receiver_id, lid, body)
+    return redirect(url_for('conversation', lid=lid, other_id=receiver_id))
+
+
+# ─── Favorites ────────────────────────────────────────────────────────────────
+
+@app.route('/sec/<int:lid>', methods=['POST'])
+@login_required
+def toggle_favorite(lid):
+    uid = session['user_id']
+    if db.is_favorite(uid, lid):
+        db.remove_favorite(uid, lid)
+    else:
+        db.add_favorite(uid, lid)
+    nxt = request.form.get('next') or request.referrer or url_for('index')
+    if nxt.startswith('/'):
+        return redirect(nxt)
+    return redirect(url_for('index'))
+
+
+@app.route('/secilmisler')
+@login_required
+def favorites():
+    rows = db.get_favorites(session['user_id'])
+    listings = [listing_to_dict(l) for l in rows]
+    return render_template('favorites.html', listings=listings, total=len(listings))
+
+
+# ─── Reports ──────────────────────────────────────────────────────────────────
+
+@app.route('/sikayet/<int:lid>', methods=['POST'])
+@login_required
+def report_listing(lid):
+    if not db.get_listing(lid):
+        abort(404)
+    reason = request.form.get('reason', '').strip()[:500]
+    if not reason:
+        flash('Şikayət səbəbini yazın.', 'warning')
+    else:
+        db.create_report(session['user_id'], lid, reason)
+        flash('Şikayətiniz qəbul edildi. Admin yoxlayacaq.', 'success')
+    return redirect(url_for('listing_detail', lid=lid))
+
+
 # ─── Payment Routes ───────────────────────────────────────────────────────────
 
 @app.route('/vip-sifaris/<int:lid>')
@@ -476,6 +562,26 @@ def admin_reject_order(oid):
     db.reject_order(oid)
     flash('Sifariş rədd edildi.', 'info')
     return redirect(url_for('admin_orders'))
+
+@app.route('/admin/sikayetler')
+@admin_required
+def admin_reports():
+    page = int(request.args.get('page', 1))
+    status = request.args.get('status', '')
+    rows, total = db.get_reports(page=page, per_page=30,
+                                 status=status if status else None)
+    pages = (total + 29) // 30
+    return render_template('admin/reports.html', reports=[dict(r) for r in rows],
+                           total=total, page=page, pages=pages, status=status)
+
+
+@app.route('/admin/sikayet-hell/<int:rid>', methods=['POST'])
+@admin_required
+def admin_resolve_report(rid):
+    db.resolve_report(rid)
+    flash('Şikayət həll edildi.', 'success')
+    return redirect(url_for('admin_reports'))
+
 
 @app.route('/admin/parametrler', methods=['GET', 'POST'])
 @admin_required
@@ -612,6 +718,43 @@ Yalnız dəyişdirilmiş tam kodu qaytarın. Heç bir izahat, markdown blok işa
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
+
+# ─── SEO (sitemap / robots) ────────────────────────────────────────────────────
+
+@app.route('/sitemap.xml')
+def sitemap():
+    from flask import Response
+    pages = []
+    pages.append(url_for('index', _external=True))
+    pages.append(url_for('about', _external=True))
+    pages.append(url_for('search', _external=True))
+    for slug in CATEGORIES:
+        pages.append(url_for('category', slug=slug, _external=True))
+    # Aktiv elanlar
+    rows, _ = db.get_listings(page=1, per_page=1000)
+    for r in rows:
+        pages.append(url_for('listing_detail', lid=r['id'], _external=True))
+
+    xml = ['<?xml version="1.0" encoding="UTF-8"?>',
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for u in pages:
+        xml.append(f'  <url><loc>{u}</loc></url>')
+    xml.append('</urlset>')
+    return Response('\n'.join(xml), mimetype='application/xml')
+
+
+@app.route('/robots.txt')
+def robots():
+    from flask import Response
+    lines = [
+        'User-agent: *',
+        'Disallow: /admin/',
+        'Disallow: /profil',
+        'Disallow: /mesajlar',
+        'Disallow: /secilmisler',
+        f'Sitemap: {url_for("sitemap", _external=True)}',
+    ]
+    return Response('\n'.join(lines), mimetype='text/plain')
 
 # ─── Error Handlers ───────────────────────────────────────────────────────────
 
