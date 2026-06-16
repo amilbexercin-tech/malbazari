@@ -905,12 +905,18 @@ def admin_settings():
     settings = db.get_all_settings()
     return render_template('admin/settings.html', settings=settings)
 
-@app.route('/admin/saglamliq')
+@app.route('/admin/saglamliq', methods=['GET', 'POST'])
 @admin_required
 def admin_health():
-    """Sistem sağlamlığı + data-itməsi yoxlaması (kalıcı disk işləyirmi)."""
+    """Sistem sağlamlığı + data-itməsi yoxlaması (kalıcı disk işləyirmi).
+    POST = canlı yazma/oxuma testini işə salır."""
     import diagnostics
-    return render_template('admin/health.html', h=diagnostics.collect_health())
+    test_result = None
+    if request.method == 'POST':
+        test_result = diagnostics.live_persistence_test()
+    return render_template('admin/health.html',
+                           h=diagnostics.collect_health(),
+                           test_result=test_result)
 
 @app.route('/admin/yedek')
 @admin_required

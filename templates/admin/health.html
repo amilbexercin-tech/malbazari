@@ -17,6 +17,23 @@
   .yes{color:#176c34;font-weight:600}.no{color:#9c1c1c;font-weight:600}
   .h-help{margin-top:22px;padding:16px 20px;background:#f4f7fb;border:1px solid #d8e3f0;border-radius:12px;font-size:.92rem;line-height:1.6}
   .h-help code{background:#e7eef7;padding:1px 6px;border-radius:5px}
+  .h-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+  .h-btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border:none;border-radius:10px;font-size:.95rem;font-weight:600;cursor:pointer;text-decoration:none}
+  .h-btn.primary{background:#1a472a;color:#fff}
+  .h-btn.secondary{background:#e7eef7;color:#234}
+  .h-problems{margin-bottom:22px}
+  .h-problem{padding:14px 18px;border-radius:10px;margin-bottom:10px;line-height:1.5}
+  .h-problem.danger{background:#fdeaea;border:1px solid #f0a3a3}
+  .h-problem.warning{background:#fff6e0;border:1px solid #f0cf7a}
+  .h-problem .ttl{font-weight:600;display:block;margin-bottom:3px}
+  .h-problem .fix{font-size:.88rem;color:#555}
+  .h-problem .fix b{color:#222}
+  .h-ok-box{padding:16px 20px;border-radius:12px;margin-bottom:22px;background:#e6f7ec;border:1px solid #9ad7af;color:#176c34;font-weight:600}
+  .h-test{padding:16px 20px;border-radius:12px;margin-bottom:22px}
+  .h-test.ok{background:#e6f7ec;border:1px solid #9ad7af}
+  .h-test.fail{background:#fdeaea;border:1px solid #f0a3a3}
+  .h-test ul{margin:8px 0 0;padding-left:20px}
+  .h-test li{margin:4px 0}
 </style>
 {% endblock %}
 
@@ -26,11 +43,48 @@
   {{ h.verdict_text }}
 </div>
 
+<!-- DÜYMƏLƏR -->
+<div class="h-actions">
+  <a href="{{ url_for('admin_health') }}" class="h-btn secondary">🔄 Yenidən yoxla</a>
+  <form method="post" action="{{ url_for('admin_health') }}" style="margin:0">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="h-btn primary">🧪 Canlı yazma testi işə sal</button>
+  </form>
+</div>
+
+<!-- CANLI TEST NƏTİCƏSİ -->
+{% if test_result %}
+<div class="h-test {{ 'ok' if test_result.ok else 'fail' }}">
+  <strong>{% if test_result.ok %}✅ Canlı test uğurlu — data həqiqətən yazılıb-oxunur.{% else %}❌ Canlı test UĞURSUZ — data saxlanmır!{% endif %}</strong>
+  <ul>
+    {% for name, passed, detail in test_result.results %}
+    <li>{{ '✅' if passed else '❌' }} <b>{{ name }}</b> — {{ detail }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<!-- TAPILAN PROBLEMLƏR -->
+{% if h.all_ok %}
+<div class="h-ok-box">✅ Heç bir problem tapılmadı.</div>
+{% else %}
+<div class="h-problems">
+  {% for p in h.problems %}
+  <div class="h-problem {{ p.level }}">
+    <span class="ttl">{{ '🔴' if p.level == 'danger' else '🟡' }} {{ p.text }}</span>
+    <span class="fix"><b>Həlli:</b> {{ p.fix }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
 <table class="h-table">
   <tr><td>Mühit</td><td>{{ 'Railway (production)' if h.is_railway else 'Lokal' }}</td></tr>
   <tr><td>Data qovluğu (DATA_DIR)</td><td class="mono">{{ h.data_dir }}</td></tr>
   <tr><td>DATA_DIR env-dən təyin olunub?</td>
       <td>{% if h.data_dir_from_env %}<span class="yes">Bəli</span>{% else %}<span class="no">Xeyr (defolt — risk)</span>{% endif %}</td></tr>
+  <tr><td>SECRET_KEY env-dən təyin olunub?</td>
+      <td>{% if h.secret_key_from_env %}<span class="yes">Bəli</span>{% else %}<span class="no">Xeyr (deploy-da sessiyalar sıfırlana bilər)</span>{% endif %}</td></tr>
   <tr><td>Baza faylı</td><td class="mono">{{ h.database_path }}</td></tr>
   <tr><td>Baza mövcuddur?</td>
       <td>{% if h.db_exists %}<span class="yes">Bəli</span> ({{ h.db_size_kb }} KB){% else %}<span class="no">Xeyr</span>{% endif %}</td></tr>
