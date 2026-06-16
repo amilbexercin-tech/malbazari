@@ -943,6 +943,24 @@ def admin_health():
                            h=diagnostics.collect_health(),
                            test_result=test_result)
 
+@app.route('/admin/telegram-test', methods=['POST'])
+@admin_required
+def admin_telegram_test():
+    """Telegram kənar yedəyini dərhal test edir: yedək yaradıb göndərir."""
+    import backup
+    if not (backup.TELEGRAM_BOT_TOKEN and backup.TELEGRAM_CHAT_ID):
+        flash('Telegram qoşulmayıb — TELEGRAM_BOT_TOKEN və TELEGRAM_CHAT_ID əlavə et.', 'warning')
+        return redirect(url_for('admin_health'))
+    try:
+        path = backup.make_backup(send=False)
+        if backup.send_to_telegram(path):
+            flash('✅ Test yedəyi Telegram-a göndərildi — Telegram-ı yoxla.', 'success')
+        else:
+            flash('❌ Telegram-a göndərilmədi. Token/chat id-ni yoxla.', 'danger')
+    except Exception as e:
+        flash(f'Xəta: {e}', 'danger')
+    return redirect(url_for('admin_health'))
+
 @app.route('/admin/yedek')
 @admin_required
 def admin_backup():

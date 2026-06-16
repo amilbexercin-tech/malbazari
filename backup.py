@@ -68,7 +68,7 @@ def send_to_telegram(zip_path):
         return False
 
 
-def make_backup():
+def make_backup(send=True):
     # Yedəklər kalıcı diskdə saxlanılır (Railway: /data/backups)
     backups_dir = os.path.join(DATA_DIR, 'backups')
     os.makedirs(backups_dir, exist_ok=True)
@@ -101,7 +101,8 @@ def make_backup():
 
     print(f"Yedək yaradıldı: {zip_path}")
     # Kənar (offsite) yedək — konfiqurasiya olunubsa Telegram-a göndər
-    send_to_telegram(zip_path)
+    if send:
+        send_to_telegram(zip_path)
     return zip_path
 
 

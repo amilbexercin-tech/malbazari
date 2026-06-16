@@ -50,6 +50,12 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit" class="h-btn primary">🧪 Canlı yazma testi işə sal</button>
   </form>
+  {% if h.telegram_backup_configured %}
+  <form method="post" action="{{ url_for('admin_telegram_test') }}" style="margin:0">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="h-btn secondary">📨 Telegram yedəyini test et</button>
+  </form>
+  {% endif %}
 </div>
 
 <!-- CANLI TEST NƏTİCƏSİ -->
