@@ -8,7 +8,7 @@ import secrets
 import threading
 import pyotp
 import qrcode
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from flask import (Flask, render_template, request, redirect, url_for,
                    session, flash, jsonify, send_from_directory, send_file, abort)
@@ -191,12 +191,17 @@ def listing_to_dict(row):
 # İndi ən çox MAINTENANCE_INTERVAL saniyədə bir dəfə işləyir.
 
 MAINTENANCE_INTERVAL = 600     # 10 dəqiqə (köhnə elanların təmizlənməsi)
-BACKUP_INTERVAL = 86400        # 24 saat (avtomatik yedək)
 AUTO_BACKUP = os.environ.get('AUTO_BACKUP', '1').lower() in ('1', 'true', 'yes')
+# Gündəlik yedək saatı — Azərbaycan vaxtı (UTC+4). Defolt 23:00 (gün sonu).
+BACKUP_HOUR_AZ = int(os.environ.get('BACKUP_HOUR', '23'))
+_AZ_TZ = timezone(timedelta(hours=4))
 _maintenance_lock = threading.Lock()
 _last_maintenance = 0.0
-_last_backup = 0.0
-_backup_lock = threading.Lock()
+
+
+def _az_now():
+    """Azərbaycan yerli vaxtı (UTC+4), server UTC olsa belə düzgün işləyir."""
+    return datetime.now(timezone.utc).astimezone(_AZ_TZ)
 
 
 def _safe_backup():
@@ -206,21 +211,24 @@ def _safe_backup():
         backup.make_backup()
     except Exception as e:
         app.logger.error("Avtomatik yedək xətası: %s", e)
-    finally:
-        _backup_lock.release()
 
 
 def run_maintenance():
-    """Vaxtı keçmiş elanları sil + sutkada bir avtomatik yedək.
-    İnterval keçməyibsə və ya başqa sorğu eyni anda işlədirsə — heç nə etmir."""
-    global _last_maintenance, _last_backup
+    """Vaxtı keçmiş elanları sil + gündə BİR DƏFƏ (gün sonunda) avtomatik yedək.
+    Yedək bazadakı tarixlə idarə olunur — restart/worker fərq etmir, təkrarlanmır."""
+    global _last_maintenance
     now = time.monotonic()
 
-    # Gündəlik yedək (arxa planda, ayrıca interval)
-    if AUTO_BACKUP and now - _last_backup >= BACKUP_INTERVAL:
-        if _backup_lock.acquire(blocking=False):
-            _last_backup = now
-            threading.Thread(target=_safe_backup, daemon=True).start()
+    # Gündəlik yedək — yalnız AZ vaxtı ilə gün sonundan sonra, gündə bir dəfə.
+    if AUTO_BACKUP:
+        az = _az_now()
+        if az.hour >= BACKUP_HOUR_AZ:
+            today = az.strftime('%Y-%m-%d')
+            try:
+                if db.get_setting('last_backup_date', '') != today and db.claim_backup_date(today):
+                    threading.Thread(target=_safe_backup, daemon=True).start()
+            except Exception as e:
+                app.logger.error("Yedək planlayıcı xətası: %s", e)
 
     if now - _last_maintenance < MAINTENANCE_INTERVAL:
         return

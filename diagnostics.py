@@ -167,6 +167,8 @@ def collect_health():
         'sentry_configured': bool(os.environ.get('SENTRY_DSN', '').strip()),
         'telegram_backup_configured': bool(os.environ.get('TELEGRAM_BOT_TOKEN', '').strip()
                                            and os.environ.get('TELEGRAM_CHAT_ID', '').strip()),
+        'last_backup_date': db.get_setting('last_backup_date', '—'),
+        'backup_hour_az': os.environ.get('BACKUP_HOUR', '23'),
         'health_ping_url': '/health',
         'base_dir': BASE_DIR,
         'database_path': DATABASE_PATH,

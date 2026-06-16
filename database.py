@@ -382,6 +382,26 @@ def get_all_settings():
     conn.close()
     return {r['key']: r['value'] for r in rows}
 
+def claim_backup_date(today):
+    """Günlük yedək üçün atomik 'kim birinci' qoruyucusu (worker-lər arası).
+    Bu gün üçün ilk dəfə çağıran True alır; qalanları False. SQLite yazı
+    kilidi sayəsində eyni gün yalnız bir yedək tetiklənir."""
+    conn = get_db()
+    try:
+        cur = conn.execute(
+            "UPDATE settings SET value=? WHERE key='last_backup_date' AND value<>?",
+            (today, today))
+        claimed = cur.rowcount > 0
+        if not claimed:
+            cur2 = conn.execute(
+                "INSERT OR IGNORE INTO settings(key,value) VALUES('last_backup_date', ?)",
+                (today,))
+            claimed = cur2.rowcount > 0
+        conn.commit()
+        return claimed
+    finally:
+        conn.close()
+
 # ─── Edit History ────────────────────────────────────────────────────────────
 
 def save_edit_history(filename, content, user_id=None):
