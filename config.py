@@ -103,10 +103,14 @@ SORT_OPTIONS = {
 # Telefon təsdiqi məcburidirmi? Hələlik SÖNDÜRÜLÜB (real SMS qoşulanda .env-də 1 et).
 REQUIRE_PHONE_VERIFICATION = os.environ.get('REQUIRE_PHONE_VERIFICATION', '').lower() in ('1', 'true', 'yes')
 OTP_TTL_SECONDS = 300          # kodun etibarlılıq müddəti (5 dəqiqə)
-SMS_PROVIDER = os.environ.get('SMS_PROVIDER', 'dev')  # 'dev' = kod ekranda göstərilir, 'twilio' = real
+# 'dev' = kod ekranda göstərilir, 'twilio' = real (beynəlxalq), 'lsim' = LSIM.az (yerli AZ)
+SMS_PROVIDER = os.environ.get('SMS_PROVIDER', 'dev')
 SMS_ACCOUNT_SID = os.environ.get('SMS_ACCOUNT_SID', '')  # Twilio Account SID
 SMS_API_KEY = os.environ.get('SMS_API_KEY', '')          # Twilio Auth Token
-SMS_SENDER = os.environ.get('SMS_SENDER', '')            # Göndərən nömrə (+1...) və ya ad
+SMS_SENDER = os.environ.get('SMS_SENDER', '')            # Göndərən nömrə (+1...) və ya ad (məs. "MalBazari")
+# LSIM.az (yerli AZ provayder) üçün
+SMS_LOGIN = os.environ.get('SMS_LOGIN', '')              # LSIM login
+SMS_PASSWORD = os.environ.get('SMS_PASSWORD', '')        # LSIM parol
 
 SUBCATEGORY_EXAMPLES = {
     # Mal-Qara
