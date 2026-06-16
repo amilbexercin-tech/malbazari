@@ -930,7 +930,8 @@ def admin_resolve_report(rid):
 @admin_required
 def admin_settings():
     if request.method == 'POST':
-        for key in ['site_name', 'anthropic_api_key', 'contact_phone', 'contact_email']:
+        for key in ['site_name', 'anthropic_api_key', 'contact_phone', 'contact_email',
+                    'social_tiktok', 'social_instagram', 'social_whatsapp']:
             val = request.form.get(key, '').strip()
             db.set_setting(key, val)
         flash('Parametrlər yadda saxlanıldı.', 'success')

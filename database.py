@@ -125,6 +125,9 @@ def init_db():
         ('anthropic_api_key', ''),
         ('contact_phone', '+994 XX XXX XX XX'),
         ('contact_email', 'info@malbazari.biz'),
+        ('social_tiktok', ''),
+        ('social_instagram', ''),
+        ('social_whatsapp', ''),
     ]
     for k, v in defaults:
         c.execute("INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)", (k, v))
