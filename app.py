@@ -25,6 +25,19 @@ from config import (SECRET_KEY, UPLOAD_FOLDER, MAX_CONTENT_LENGTH,
                     SUBCATEGORY_EXAMPLES, DEBUG, PURPOSES, SORT_OPTIONS,
                     OTP_TTL_SECONDS, SMS_PROVIDER, REQUIRE_PHONE_VERIFICATION)
 
+# ── Sentry (kod xətası monitorinqi) — SENTRY_DSN təyin olunubsa aktivləşir ──
+SENTRY_DSN = os.environ.get('SENTRY_DSN', '').strip()
+if SENTRY_DSN:
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.flask import FlaskIntegration
+        sentry_sdk.init(dsn=SENTRY_DSN,
+                        integrations=[FlaskIntegration()],
+                        traces_sample_rate=0.0,
+                        send_default_pii=False)
+    except Exception as _e:
+        print(f'Sentry işə düşmədi: {_e}')
+
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -286,6 +299,18 @@ def _parse_filters():
         'breed': (request.args.get('breed') or '').strip() or None,
         'sort': sort,
     }
+
+@app.route('/health')
+@limiter.exempt
+@csrf.exempt
+def health_ping():
+    """Public liveness yoxlaması — UptimeRobot kimi monitorinq xidmətləri üçün.
+    Baza əlçatandırsa 200 'ok', deyilsə 500 qaytarır."""
+    try:
+        db.get_setting('site_name')
+        return jsonify(status='ok'), 200
+    except Exception:
+        return jsonify(status='error'), 500
 
 @app.route('/')
 def index():

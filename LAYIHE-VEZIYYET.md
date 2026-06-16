@@ -1,6 +1,6 @@
 # 🐄 MalBazari.biz — Tam Layihə Vəziyyəti
 
-> Son yenilənmə: 2026-06-15. Bu sənəd saytda nə olduğunu, nəyin qurulduğunu və nəyin qaldığını izah edir.
+> Son yenilənmə: 2026-06-16. Bu sənəd saytda nə olduğunu, nəyin qurulduğunu və nəyin qaldığını izah edir.
 
 ---
 
@@ -54,6 +54,7 @@ Azərbaycan üçün **heyvan alqı-satqı elan platforması** — Mal-Qara, Quş
 - ✅ Parametrlər (sayt adı, əlaqə, Anthropic API açarı)
 - ✅ **Yedək Al** (baza + şəkilləri zip kimi yüklə)
 - ✅ Kod redaktoru (yalnız şablon/mətn — `.py` təhlükəsizlik üçün bağlı)
+- ✅ **Sağlamlıq səhifəsi** (`/admin/saglamliq`) — data kalıcı diskdə saxlanırmı, problemlər siyahısı, canlı yazma testi
 - ✅ Bütün admin **2FA arxasında**
 
 ---
@@ -89,11 +90,13 @@ Azərbaycan üçün **heyvan alqı-satqı elan platforması** — Mal-Qara, Quş
 |---|---|
 | **GitHub repo** | ✅ Bağlı (kod orada) |
 | **Railway deploy** | ✅ Canlı |
-| **Kalıcı disk (Volume)** | ✅ `/data` (data itmir) |
+| **Kalıcı disk (Volume)** | ✅ `/data` mount + `DATA_DIR=/data` (data itmir — 2026-06-16 təsdiqləndi) |
 | **Env Variables** | ✅ SECRET_KEY, DATA_DIR, SESSION_COOKIE_SECURE, ADMIN_PHONE, ADMIN_PASSWORD |
 | **HTTPS** | ✅ Avtomatik |
 | **Avtomatik deploy** | ✅ push → Railway yenilənir |
-| **Avtomatik backup** | ✅ Gündəlik |
+| **Avtomatik backup** | ✅ Gündəlik (kalıcı diskə) + opsional Telegram kənar yedək |
+| **Server regionu** | ✅ Avropa (2026-06-16) |
+| **Uptime health linki** | ✅ `/health` (UptimeRobot üçün hazır) |
 | **Öz domeni (malbazari.az)** | ⏳ Qalıb |
 
 ---
@@ -124,13 +127,18 @@ Sən terminala toxunmursan. Sayt sınsa, Railway-dən bir kliklə geri qaytarmaq
 ## 11. QALAN İŞLƏR (sabah / sonra üçün)
 1. **Real SMS** qoş (Twilio və ya yerli AZ provayder) → telefon təsdiqi + parol bərpası tam işləsin
    - Sonra `.env`-də: `REQUIRE_PHONE_VERIFICATION=1`, `SMS_PROVIDER=twilio`, açarlar
-2. **Bildiriş/monitorinq** qur:
-   - **UptimeRobot** (pulsuz) — sayt düşəndə xəbər
-   - **Sentry** (pulsuz) — kod xətası olanda səbəbi ilə xəbər (`/saglamliq` endpoint + SENTRY_DSN əlavə ediləcək)
+2. **Monitorinq** — kod hazırdır, yalnız xidmətə qoşmaq qalır:
+   - **UptimeRobot** (pulsuz) — `https://<sayt>/health` linkini əlavə et → sayt düşəndə email/bildiriş
+   - **Sentry** (pulsuz) — sentry.io-da layihə yarat, Railway Variables-ə `SENTRY_DSN` əlavə et → kod xətası olanda səbəbi ilə xəbər
 3. **Öz domenin** (malbazari.az) — alıb Railway-ə bağlamaq
-4. **Kənar yedək** — vaxtaşırı "Yedək Al" ilə zip-i kompüterə endir (və ya avtomatik bulud/Telegram yedək)
-5. (İstəyə bağlı) Server regionunu **Avropaya** keçir (AZ-yə daha sürətli)
-6. (Böyümə) Məxfilik/Şərtlər səhifələri, satıcı reytinqi, saxlanan axtarış, PWA
+4. **Kənar yedək (Telegram)** — kod hazırdır: Railway Variables-ə `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` əlavə et → gündəlik yedək avtomatik Telegram-a gəlsin. (Əl ilə: admin "Yedək Al" ilə zip-i kompüterə də endirmək olar.)
+5. (Böyümə) Məxfilik/Şərtlər səhifələri, satıcı reytinqi, saxlanan axtarış, PWA
+
+### ✅ Yeni həll olunanlar (2026-06-16)
+- **Data itməsi düzəldildi** — Railway Volume `/data`-a mount + `DATA_DIR=/data`. Səbəb: əvvəl data müvəqqəti `/app` diskində idi, hər deploy/restart-da silinirdi (admin 2FA sıfırlanırdı, elanlar yox olurdu).
+- **Sağlamlıq səhifəsi** (`/admin/saglamliq`) + startup diaqnostikası əlavə olundu.
+- **Server regionu** Avropaya keçirildi.
+- **`/health`** public endpoint (UptimeRobot üçün) əlavə olundu.
 
 ---
 

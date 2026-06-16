@@ -14,13 +14,58 @@ Linux cron nümunəsi (hər gecə 03:00):
 """
 import os
 import glob
+import uuid
 import sqlite3
 import zipfile
 import tempfile
+import urllib.request
 from datetime import datetime
 from config import DATABASE_PATH, UPLOAD_FOLDER, DATA_DIR
 
 KEEP = 14  # neçə son yedək saxlanılsın
+
+# Kənar (offsite) yedək üçün Telegram bot — env-dən. Boşdursa söndürülü.
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '').strip()
+TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID', '').strip()
+
+
+def send_to_telegram(zip_path):
+    """Yedək zip-ini Telegram-a göndərir (offsite ehtiyat nüsxə).
+    TELEGRAM_BOT_TOKEN və TELEGRAM_CHAT_ID təyin olunmayıbsa heç nə etmir.
+    Əlavə kitabxana tələb etmir — yalnız standart urllib (multipart)."""
+    if not (TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID):
+        return False
+    # Telegram bot sendDocument limiti ~50 MB
+    if os.path.getsize(zip_path) > 49 * 1024 * 1024:
+        print("Telegram yedək ötürüldü: fayl 50 MB-dan böyükdür.")
+        return False
+
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendDocument"
+    boundary = uuid.uuid4().hex
+    fname = os.path.basename(zip_path)
+    with open(zip_path, 'rb') as f:
+        file_bytes = f.read()
+
+    def part(name, value):
+        return (f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"'
+                f'\r\n\r\n{value}\r\n').encode()
+
+    body = part('chat_id', TELEGRAM_CHAT_ID)
+    body += part('caption', f'MalBazari yedək — {fname}')
+    body += (f'--{boundary}\r\nContent-Disposition: form-data; name="document"; '
+             f'filename="{fname}"\r\nContent-Type: application/zip\r\n\r\n').encode()
+    body += file_bytes + f'\r\n--{boundary}--\r\n'.encode()
+
+    req = urllib.request.Request(url, data=body, method='POST')
+    req.add_header('Content-Type', f'multipart/form-data; boundary={boundary}')
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            ok = resp.status == 200
+        print("Telegram-a yedək göndərildi." if ok else "Telegram yedək uğursuz.")
+        return ok
+    except Exception as e:
+        print(f"Telegram yedək xətası: {e}")
+        return False
 
 
 def make_backup():
@@ -55,6 +100,8 @@ def make_backup():
             pass
 
     print(f"Yedək yaradıldı: {zip_path}")
+    # Kənar (offsite) yedək — konfiqurasiya olunubsa Telegram-a göndər
+    send_to_telegram(zip_path)
     return zip_path
 
 

@@ -100,6 +100,11 @@
       <td>{% if h.marker_existed_at_boot %}<span class="yes">Bəli</span>{% else %}<span class="no">Xeyr</span>{% endif %}</td></tr>
   <tr><td>İstifadəçi sayı</td><td>{{ h.users if h.users is not none else '—' }}</td></tr>
   <tr><td>Aktiv elan sayı</td><td>{{ h.listings if h.listings is not none else '—' }}</td></tr>
+  <tr><td>Monitorinq — Sentry (xəta xəbəri)</td>
+      <td>{% if h.sentry_configured %}<span class="yes">Qoşulub</span>{% else %}<span class="no">Qoşulmayıb</span>{% endif %}</td></tr>
+  <tr><td>Kənar yedək — Telegram</td>
+      <td>{% if h.telegram_backup_configured %}<span class="yes">Qoşulub</span>{% else %}<span class="no">Qoşulmayıb</span>{% endif %}</td></tr>
+  <tr><td>Uptime monitorinq linki</td><td class="mono">{{ h.health_ping_url }}</td></tr>
   <tr><td>Yoxlanma vaxtı</td><td class="mono">{{ h.checked_at }}</td></tr>
 </table>
 

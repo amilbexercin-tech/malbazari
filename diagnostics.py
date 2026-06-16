@@ -164,6 +164,10 @@ def collect_health():
         'data_dir': DATA_DIR,
         'data_dir_from_env': DATA_DIR_FROM_ENV,
         'secret_key_from_env': SECRET_KEY_FROM_ENV,
+        'sentry_configured': bool(os.environ.get('SENTRY_DSN', '').strip()),
+        'telegram_backup_configured': bool(os.environ.get('TELEGRAM_BOT_TOKEN', '').strip()
+                                           and os.environ.get('TELEGRAM_CHAT_ID', '').strip()),
+        'health_ping_url': '/health',
         'base_dir': BASE_DIR,
         'database_path': DATABASE_PATH,
         'db_exists': db_exists,
