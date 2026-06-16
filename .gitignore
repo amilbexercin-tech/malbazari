@@ -13,6 +13,9 @@ __pycache__/
 .secret_key
 .env
 
+# Diaqnostika marker faylı (kalıcılıq sayğacı)
+.persistence_marker.json
+
 # Yüklənmiş şəkillər (istifadəçi məzmunu)
 static/uploads/*
 !static/uploads/.gitkeep

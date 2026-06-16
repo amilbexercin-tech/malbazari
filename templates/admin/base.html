@@ -49,6 +49,9 @@
       <a href="{{ url_for('admin_editor') }}" class="nav-item {% if request.endpoint == 'admin_editor' %}active{% endif %}">
         <i class="fas fa-code"></i> Kod Redaktoru
       </a>
+      <a href="{{ url_for('admin_health') }}" class="nav-item {% if request.endpoint == 'admin_health' %}active{% endif %}">
+        <i class="fas fa-heart-pulse"></i> Sağlamlıq
+      </a>
       <div class="nav-divider"></div>
       <a href="{{ url_for('index') }}" class="nav-item">
         <i class="fas fa-globe"></i> Sayta Get

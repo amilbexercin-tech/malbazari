@@ -52,6 +52,12 @@ ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 with app.app_context():
     db.init_db()
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    # Data-itməsi diaqnostikası: kalıcı diskin qoşulub-qoşulmadığını loga yaz.
+    try:
+        import diagnostics
+        diagnostics.log_startup_diagnostics()
+    except Exception as _e:
+        print(f'Diaqnostika işə düşmədi: {_e}')
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -898,6 +904,13 @@ def admin_settings():
         return redirect(url_for('admin_settings'))
     settings = db.get_all_settings()
     return render_template('admin/settings.html', settings=settings)
+
+@app.route('/admin/saglamliq')
+@admin_required
+def admin_health():
+    """Sistem sağlamlığı + data-itməsi yoxlaması (kalıcı disk işləyirmi)."""
+    import diagnostics
+    return render_template('admin/health.html', h=diagnostics.collect_health())
 
 @app.route('/admin/yedek')
 @admin_required

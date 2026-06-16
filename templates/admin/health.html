@@ -1,0 +1,57 @@
+{% extends 'admin/base.html' %}
+{% block title %}Sağlamlıq{% endblock %}
+{% block page_title %}🩺 Sistem Sağlamlığı{% endblock %}
+
+{% block extra_css %}
+<style>
+  .h-verdict{padding:18px 20px;border-radius:12px;margin-bottom:22px;font-weight:600;line-height:1.5}
+  .h-verdict.ok{background:#e6f7ec;color:#176c34;border:1px solid #9ad7af}
+  .h-verdict.warning{background:#fff6e0;color:#8a5b00;border:1px solid #f0cf7a}
+  .h-verdict.danger{background:#fdeaea;color:#9c1c1c;border:1px solid #f0a3a3}
+  .h-verdict .big{display:block;font-size:1.15rem;margin-bottom:4px}
+  .h-table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  .h-table td{padding:11px 16px;border-bottom:1px solid #eee;font-size:.94rem}
+  .h-table tr:last-child td{border-bottom:none}
+  .h-table td:first-child{color:#666;width:42%;font-weight:500}
+  .h-table td.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;word-break:break-all}
+  .yes{color:#176c34;font-weight:600}.no{color:#9c1c1c;font-weight:600}
+  .h-help{margin-top:22px;padding:16px 20px;background:#f4f7fb;border:1px solid #d8e3f0;border-radius:12px;font-size:.92rem;line-height:1.6}
+  .h-help code{background:#e7eef7;padding:1px 6px;border-radius:5px}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="h-verdict {{ h.verdict }}">
+  <span class="big">Data kalıcı diskdə saxlanılır?</span>
+  {{ h.verdict_text }}
+</div>
+
+<table class="h-table">
+  <tr><td>Mühit</td><td>{{ 'Railway (production)' if h.is_railway else 'Lokal' }}</td></tr>
+  <tr><td>Data qovluğu (DATA_DIR)</td><td class="mono">{{ h.data_dir }}</td></tr>
+  <tr><td>DATA_DIR env-dən təyin olunub?</td>
+      <td>{% if h.data_dir_from_env %}<span class="yes">Bəli</span>{% else %}<span class="no">Xeyr (defolt — risk)</span>{% endif %}</td></tr>
+  <tr><td>Baza faylı</td><td class="mono">{{ h.database_path }}</td></tr>
+  <tr><td>Baza mövcuddur?</td>
+      <td>{% if h.db_exists %}<span class="yes">Bəli</span> ({{ h.db_size_kb }} KB){% else %}<span class="no">Xeyr</span>{% endif %}</td></tr>
+  <tr><td>Data qovluğu yazıla bilir?</td>
+      <td>{% if h.data_dir_writable %}<span class="yes">Bəli</span>{% else %}<span class="no">Xeyr</span>{% endif %}</td></tr>
+  <tr><td>Şəkil qovluğu yazıla bilir?</td>
+      <td>{% if h.uploads_writable %}<span class="yes">Bəli</span>{% else %}<span class="no">Xeyr</span>{% endif %}</td></tr>
+  <tr><td>Boş disk sahəsi</td><td>{{ h.disk_free_mb }} MB</td></tr>
+  <tr><td>İlk işə salma (first boot)</td><td class="mono">{{ h.first_boot }}</td></tr>
+  <tr><td>Son işə salma (last boot)</td><td class="mono">{{ h.last_boot }}</td></tr>
+  <tr><td>Boot sayı</td><td>{{ h.boot_count }}</td></tr>
+  <tr><td>Bu boot-dan əvvəl data vardı?</td>
+      <td>{% if h.marker_existed_at_boot %}<span class="yes">Bəli</span>{% else %}<span class="no">Xeyr</span>{% endif %}</td></tr>
+  <tr><td>İstifadəçi sayı</td><td>{{ h.users if h.users is not none else '—' }}</td></tr>
+  <tr><td>Aktiv elan sayı</td><td>{{ h.listings if h.listings is not none else '—' }}</td></tr>
+  <tr><td>Yoxlanma vaxtı</td><td class="mono">{{ h.checked_at }}</td></tr>
+</table>
+
+<div class="h-help">
+  <strong>Necə oxumalı?</strong><br>
+  • <b>"İlk işə salma" və "Boot sayı"</b> restartlar/deploy-lar arası dəyişməməlidir. Hər deploy-dan sonra "İlk işə salma" təzələnirsə və ya elanlar/istifadəçilər sıfırlanırsa — <b>disk kalıcı deyil</b>.<br>
+  • Düzəliş (Railway): <b>Service → Settings → Volumes</b>-dan Volume yarat (məs. mount path = <code>/data</code>), sonra <b>Variables</b>-ə <code>DATA_DIR=/data</code> əlavə et və yenidən deploy et. Volume mount path ilə <code>DATA_DIR</code> <b>eyni</b> olmalıdır.
+</div>
+{% endblock %}
