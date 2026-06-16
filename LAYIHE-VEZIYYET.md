@@ -51,7 +51,7 @@ Azərbaycan üçün **heyvan alqı-satqı elan platforması** — Mal-Qara, Quş
 - ✅ Elanların idarəsi (bax / sil)
 - ✅ İstifadəçilərin idarəsi (bax / sil)
 - ✅ Şikayətlərin idarəsi (həll et / elanı sil)
-- ✅ Parametrlər (sayt adı, əlaqə, Anthropic API açarı)
+- ✅ Parametrlər (sayt adı, əlaqə, Anthropic API açarı, **sosial şəbəkə linkləri**)
 - ✅ **Yedək Al** (baza + şəkilləri zip kimi yüklə)
 - ✅ Kod redaktoru (yalnız şablon/mətn — `.py` təhlükəsizlik üçün bağlı)
 - ✅ **Sağlamlıq səhifəsi** (`/admin/saglamliq`) — data kalıcı diskdə saxlanırmı, problemlər siyahısı, canlı yazma testi
@@ -130,18 +130,18 @@ Sən terminala toxunmursan. Sayt sınsa, Railway-dən bir kliklə geri qaytarmaq
    - Açar gələndə Railway Variables: `SMS_PROVIDER=lsim`, `SMS_LOGIN`, `SMS_PASSWORD`, `SMS_SENDER=MalBazari`, `REQUIRE_PHONE_VERIFICATION=1`
    - LSIM portal: sendsms.az · API sənəd: docs.lsim.az
    - (Alternativ provayderlər: Twilio kodu da hazır; MOBIS.az üçün API uyğunlaşdırıla bilər)
-2. **Monitorinq** — kod hazırdır, yalnız xidmətə qoşmaq qalır:
-   - **UptimeRobot** (pulsuz) — `https://<sayt>/health` linkini əlavə et → sayt düşəndə email/bildiriş
-   - **Sentry** (pulsuz) — sentry.io-da layihə yarat, Railway Variables-ə `SENTRY_DSN` əlavə et → kod xətası olanda səbəbi ilə xəbər
-3. **Öz domenin** (malbazari.az) — alıb Railway-ə bağlamaq
-4. **Kənar yedək (Telegram)** — kod hazırdır: Railway Variables-ə `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` əlavə et → gündəlik yedək avtomatik Telegram-a gəlsin. (Əl ilə: admin "Yedək Al" ilə zip-i kompüterə də endirmək olar.)
-5. (Böyümə) Məxfilik/Şərtlər səhifələri, satıcı reytinqi, saxlanan axtarış, PWA
+2. **Öz domenin** (malbazari.az) — alıb Railway-ə bağlamaq
+3. **Sosial səhifə linkləri** — TikTok/Instagram/WhatsApp səhifələri açılanda Admin → Parametrlər → "Sosial Şəbəkələr"-ə linkləri yapışdır
+4. (Böyümə) Məxfilik/Şərtlər səhifələri, satıcı reytinqi, saxlanan axtarış, PWA
 
-### ✅ Yeni həll olunanlar (2026-06-16)
-- **Data itməsi düzəldildi** — Railway Volume `/data`-a mount + `DATA_DIR=/data`. Səbəb: əvvəl data müvəqqəti `/app` diskində idi, hər deploy/restart-da silinirdi (admin 2FA sıfırlanırdı, elanlar yox olurdu).
-- **Sağlamlıq səhifəsi** (`/admin/saglamliq`) + startup diaqnostikası əlavə olundu.
+### ✅ Bu gün edilənlər (2026-06-16)
+- **🔴 Data itməsi düzəldildi** (ən vacib) — Railway Volume `/data`-a mount + `DATA_DIR=/data`. Səbəb: əvvəl data müvəqqəti `/app` diskində idi, hər deploy/restart-da silinirdi (admin hər girişdə yenidən QR/2FA istəyirdi, elanlar ~1 saatdan sonra yox olurdu).
+- **Sağlamlıq səhifəsi** (`/admin/saglamliq`) + startup diaqnostikası — data kalıcı diskdə saxlanırmı, problemlər siyahısı, canlı yazma testi, Telegram test düyməsi.
 - **Server regionu** Avropaya keçirildi.
-- **`/health`** public endpoint (UptimeRobot üçün) əlavə olundu.
+- **Monitorinq qoşuldu:** `/health` public endpoint + **UptimeRobot** (sayt düşəndə xəbər) + **Sentry** (`SENTRY_DSN`, kod xətası xəbəri).
+- **Kənar yedək — Telegram qoşuldu:** gündəlik yedək avtomatik Telegram-a gəlir. **Gündə 1 dəfə, gün sonunda** (AZ vaxtı, saat 23:00; `BACKUP_HOUR`). Bazadakı tarixlə idarə olunur — restart/worker təkrar göndərmir.
+- **Footer sosial ikonlar:** Facebook silindi → **TikTok** əlavə olundu (sıra: TikTok, Instagram, WhatsApp). Linklər Admin → Parametrlər → "Sosial Şəbəkələr"-dən idarə olunur.
+- **SMS (LSIM) kodu yazıldı** — açar gözlənilir (bax: Qalan işlər #1).
 
 ---
 
