@@ -125,8 +125,11 @@ Sən terminala toxunmursan. Sayt sınsa, Railway-dən bir kliklə geri qaytarmaq
 ---
 
 ## 11. QALAN İŞLƏR (sabah / sonra üçün)
-1. **Real SMS** qoş (Twilio və ya yerli AZ provayder) → telefon təsdiqi + parol bərpası tam işləsin
-   - Sonra `.env`-də: `REQUIRE_PHONE_VERIFICATION=1`, `SMS_PROVIDER=twilio`, açarlar
+1. **Real SMS** — KOD HAZIRDIR (LSIM.az inteqrasiyası yazılıb), ⏳ yalnız LSIM açarı gözlənilir
+   - LSIM-dən: login + parol + təsdiqlənmiş "MalBazari" göndərən ad
+   - Açar gələndə Railway Variables: `SMS_PROVIDER=lsim`, `SMS_LOGIN`, `SMS_PASSWORD`, `SMS_SENDER=MalBazari`, `REQUIRE_PHONE_VERIFICATION=1`
+   - LSIM portal: sendsms.az · API sənəd: docs.lsim.az
+   - (Alternativ provayderlər: Twilio kodu da hazır; MOBIS.az üçün API uyğunlaşdırıla bilər)
 2. **Monitorinq** — kod hazırdır, yalnız xidmətə qoşmaq qalır:
    - **UptimeRobot** (pulsuz) — `https://<sayt>/health` linkini əlavə et → sayt düşəndə email/bildiriş
    - **Sentry** (pulsuz) — sentry.io-da layihə yarat, Railway Variables-ə `SENTRY_DSN` əlavə et → kod xətası olanda səbəbi ilə xəbər
