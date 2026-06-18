@@ -248,7 +248,7 @@ def run_maintenance():
 
 # Əsas (canonical) domen — təyin olunsa, bütün digər hostlar buraya 301 yönləndirilir.
 # Domen alınmayana qədər boş qalır → heç bir yönləndirmə olmur (sayt eyni işləyir).
-# Domen bağlananda Railway Variables-ə əlavə et: CANONICAL_HOST=heyvanbazar.az
+# Domen bağlananda Railway Variables-ə əlavə et: CANONICAL_HOST=malqara.az
 CANONICAL_HOST = os.environ.get('CANONICAL_HOST', '').strip().lower()
 
 
@@ -279,7 +279,7 @@ def inject_globals():
         'purposes': PURPOSES,
         'sort_options': SORT_OPTIONS,
         'subcategory_examples': SUBCATEGORY_EXAMPLES,
-        'site_name': db.get_setting('site_name', 'HeyvanBazar'),
+        'site_name': db.get_setting('site_name', 'MalQara'),
         'current_user': db.get_user_by_id(session['user_id']) if 'user_id' in session else None,
         'now': datetime.now(),
         'db_setting': db.get_setting,
@@ -580,7 +580,7 @@ def two_factor_setup():
             return redirect(url_for('backup_codes_view'))
         flash('Kod yanlışdır, yenidən cəhd edin.', 'danger')
     uri = pyotp.totp.TOTP(secret).provisioning_uri(name=user['phone'],
-                                                   issuer_name='HeyvanBazar')
+                                                   issuer_name='MalQara')
     return render_template('two_factor_setup.html', qr=_qr_data_uri(uri), secret=secret)
 
 @app.route('/2fa-berpa-kodlari')

@@ -1,4 +1,4 @@
-/* HeyvanBazar — Main JS */
+/* MalQara — Main JS */
 
 // ── Navbar scroll effect ──
 const navbar = document.getElementById('navbar');

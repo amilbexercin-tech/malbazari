@@ -7,7 +7,7 @@ from config import DEBUG
 
 if __name__ == '__main__':
     print("=" * 50)
-    print("  HeyvanBazar ise dusdu!")
+    print("  MalQara ise dusdu!")
     print("  http://localhost:5000")
     print("  Admin: http://localhost:5000/admin/")
     print(f"  Debug rejimi: {'ACIQ' if DEBUG else 'SONDURULUB'}")

@@ -1,4 +1,4 @@
-/* HeyvanBazar Admin JS */
+/* MalQara Admin JS */
 
 function toggleSidebar() {
   const sidebar = document.getElementById('adminSidebar');

@@ -238,7 +238,7 @@ def log_startup_diagnostics():
 
     marker = record_boot()
     out('=' * 60)
-    out('  HeyvanBazar — DATA DİAQNOSTİKASI')
+    out('  MalQara — DATA DİAQNOSTİKASI')
     out('=' * 60)
     out(f'  Mühit         : {"Railway (production)" if IS_RAILWAY else "Lokal"}')
     out(f'  DATA_DIR      : {DATA_DIR}  (env-dən: {DATA_DIR_FROM_ENV})')

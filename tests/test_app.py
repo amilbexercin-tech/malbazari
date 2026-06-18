@@ -1,4 +1,4 @@
-"""HeyvanBazar əsas funksiyaların testləri."""
+"""MalQara əsas funksiyaların testləri."""
 import database
 from conftest import register, login, logout, create_listing
 

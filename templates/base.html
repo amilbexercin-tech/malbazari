@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>{% block title %}{{ site_name }}{% endblock %}</title>
 <meta name="description" content="{% block desc %}Azərbaycanda mal-qara, quş və arı məhsulları alqı-satqısı üçün ən böyük elan platforması{% endblock %}">
-<link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -18,8 +18,8 @@
 <nav class="navbar" id="navbar">
   <div class="container navbar-inner">
     <a href="{{ url_for('index') }}" class="navbar-brand">
-      <img src="{{ url_for('static', filename='img/logo.svg') }}" class="brand-icon" alt="" width="34" height="34">
-      <span class="brand-text">Heyvan<span>Bazar</span></span>
+      <img src="{{ url_for('static', filename='img/logo3d.png') }}" class="brand-icon" alt="MalQara" width="42" height="42">
+      <span class="brand-text">Mal<span>Qara</span></span>
     </a>
 
     <form class="navbar-search" action="{{ url_for('search') }}" method="get">
@@ -145,7 +145,7 @@
 <footer class="footer">
   <div class="container footer-grid">
     <div class="footer-brand">
-      <div class="footer-logo"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="28" height="28" style="vertical-align:-7px;margin-right:7px">HeyvanBazar</div>
+      <div class="footer-logo"><img src="{{ url_for('static', filename='img/logo3d.png') }}" alt="" width="34" height="34" style="vertical-align:-9px;margin-right:8px">MalQara</div>
       <p>{{ t('footer_about') }}</p>
       <div class="footer-social">
         <a href="{{ db_setting('social_tiktok') or '#' }}" target="_blank" rel="noopener" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
@@ -173,7 +173,7 @@
     </div>
   </div>
   <div class="footer-bottom">
-    <p>&copy; {{ now.year }} HeyvanBazar — {{ t('rights') }}</p>
+    <p>&copy; {{ now.year }} MalQara — {{ t('rights') }}</p>
   </div>
 </footer>
 

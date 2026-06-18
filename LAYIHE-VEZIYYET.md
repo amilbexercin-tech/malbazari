@@ -1,8 +1,8 @@
-# 🐄 HeyvanBazar — Tam Layihə Vəziyyəti
+# 🐄 MalQara — Tam Layihə Vəziyyəti
 
 > Son yenilənmə: 2026-06-18. Bu sənəd saytda nə olduğunu, nəyin qurulduğunu və nəyin qaldığını izah edir.
 >
-> **⚠️ Rebrand (2026-06-18):** Layihə **MalBazari → HeyvanBazar** adına keçdi. Səbəb: `malbazari.az` və `malbazari.com` artıq **eyni adlı, canlı, pullu işləyən rəqibdədir** (api.malbazari.az, ~273 elan, premium paketlər). Ona görə yeni brend **HeyvanBazar** seçildi — `heyvanbazar.az` + `heyvanbazar.com` boşdur, ikisi də alınacaq.
+> **⚠️ Rebrand (2026-06-18):** Layihə **MalBazari → HeyvanBazar → MalQara** adına keçdi (yekun: **MalQara**). Səbəblər: (1) `malbazari.az`/`.com` eyni adlı canlı rəqibdədir; (2) `heyvanbazari.az` (bir hərf fərqlə) artıq mövcuddur — qarışıqlıq riski. Yekun brend **MalQara** seçildi — `malqara.az` + `malqara.com` **boşdur** (təsdiqləndi), ikisi də alınacaq. Loqo: inək+qoyun+toyuq+sünbül emblemi (3D, animasiyalı).
 
 ---
 
@@ -10,7 +10,7 @@
 Azərbaycan üçün **heyvan alqı-satqı elan platforması** — Mal-Qara, Quşçuluq, Arıçılıq.
 3 dildə (AZ/RU/EN), 58 rayon, heyvana xas sahələrlə.
 
-- **Canlı link:** https://web-production-516be.up.railway.app (öz domeni: **heyvanbazar.az** — alınma mərhələsində)
+- **Canlı link:** https://web-production-516be.up.railway.app (öz domeni: **malqara.az** — alınma mərhələsində)
 - **Kod (GitHub):** https://github.com/amilbexercin-tech/malbazari
 - **Admin login:** `@Superlahiye@` + parol (Railway Variables-dakı `ADMIN_PASSWORD`) + 2FA (Authenticator)
 
@@ -99,7 +99,7 @@ Azərbaycan üçün **heyvan alqı-satqı elan platforması** — Mal-Qara, Quş
 | **Avtomatik backup** | ✅ Gündəlik (kalıcı diskə) + opsional Telegram kənar yedək |
 | **Server regionu** | ✅ Avropa (2026-06-16) |
 | **Uptime health linki** | ✅ `/health` (UptimeRobot üçün hazır) |
-| **Öz domeni (heyvanbazar.az + .com)** | ⏳ Alınır — kod hazır (`CANONICAL_HOST` env + 301 yönləndirmə) |
+| **Öz domeni (malqara.az + .com)** | ⏳ Alınır — kod hazır (`CANONICAL_HOST` env + 301 yönləndirmə) |
 
 ---
 
@@ -128,11 +128,11 @@ Sən terminala toxunmursan. Sayt sınsa, Railway-dən bir kliklə geri qaytarmaq
 
 ## 11. QALAN İŞLƏR (sabah / sonra üçün)
 1. **Real SMS** — KOD HAZIRDIR (LSIM.az inteqrasiyası yazılıb), ⏳ yalnız LSIM açarı gözlənilir
-   - LSIM-dən: login + parol + təsdiqlənmiş "HeyvanBazar" göndərən ad
-   - Açar gələndə Railway Variables: `SMS_PROVIDER=lsim`, `SMS_LOGIN`, `SMS_PASSWORD`, `SMS_SENDER=HeyvanBazar`, `REQUIRE_PHONE_VERIFICATION=1`
+   - LSIM-dən: login + parol + təsdiqlənmiş "MalQara" göndərən ad
+   - Açar gələndə Railway Variables: `SMS_PROVIDER=lsim`, `SMS_LOGIN`, `SMS_PASSWORD`, `SMS_SENDER=MalQara`, `REQUIRE_PHONE_VERIFICATION=1`
    - LSIM portal: sendsms.az · API sənəd: docs.lsim.az
    - (Alternativ provayderlər: Twilio kodu da hazır; MOBIS.az üçün API uyğunlaşdırıla bilər)
-2. **Öz domenin** (heyvanbazar.az + heyvanbazar.com) — almaq → Railway-ə bağlamaq → Railway Variables-ə `CANONICAL_HOST=heyvanbazar.az` qoymaq (kod artıq hazır: digər bütün hostlar avtomatik .az-a 301 yönlənir, `/health` istisna)
+2. **Öz domenin** (malqara.az + malqara.com) — almaq → Railway-ə bağlamaq → Railway Variables-ə `CANONICAL_HOST=malqara.az` qoymaq (kod artıq hazır: digər bütün hostlar avtomatik .az-a 301 yönlənir, `/health` istisna)
 3. **Sosial səhifə linkləri** — TikTok/Instagram/WhatsApp səhifələri açılanda Admin → Parametrlər → "Sosial Şəbəkələr"-ə linkləri yapışdır
 4. (Böyümə) Məxfilik/Şərtlər səhifələri, satıcı reytinqi, saxlanan axtarış, PWA
 
