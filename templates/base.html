@@ -19,7 +19,7 @@
   <div class="container navbar-inner">
     <a href="{{ url_for('index') }}" class="navbar-brand">
       <img src="{{ url_for('static', filename='img/logo3d.png') }}" class="brand-icon" alt="MalQara" width="42" height="42">
-      <span class="brand-text">Mal<span>Qara</span></span>
+      <span class="brand-text">MalQara<span>.az</span></span>
     </a>
 
     <form class="navbar-search" action="{{ url_for('search') }}" method="get">
@@ -145,7 +145,7 @@
 <footer class="footer">
   <div class="container footer-grid">
     <div class="footer-brand">
-      <div class="footer-logo"><img src="{{ url_for('static', filename='img/logo3d.png') }}" alt="" width="34" height="34" style="vertical-align:-9px;margin-right:8px">MalQara</div>
+      <div class="footer-logo"><img src="{{ url_for('static', filename='img/logo3d.png') }}" alt="" width="34" height="34" style="vertical-align:-9px;margin-right:8px">MalQara.az</div>
       <p>{{ t('footer_about') }}</p>
       <div class="footer-social">
         <a href="{{ db_setting('social_tiktok') or '#' }}" target="_blank" rel="noopener" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
@@ -173,7 +173,7 @@
     </div>
   </div>
   <div class="footer-bottom">
-    <p>&copy; {{ now.year }} MalQara — {{ t('rights') }}</p>
+    <p>&copy; {{ now.year }} MalQara.az — {{ t('rights') }}</p>
   </div>
 </footer>
 

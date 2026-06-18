@@ -279,7 +279,7 @@ def inject_globals():
         'purposes': PURPOSES,
         'sort_options': SORT_OPTIONS,
         'subcategory_examples': SUBCATEGORY_EXAMPLES,
-        'site_name': db.get_setting('site_name', 'MalQara'),
+        'site_name': db.get_setting('site_name', 'MalQara.az'),
         'current_user': db.get_user_by_id(session['user_id']) if 'user_id' in session else None,
         'now': datetime.now(),
         'db_setting': db.get_setting,

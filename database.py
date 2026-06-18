@@ -121,7 +121,7 @@ def init_db():
                 c.execute("UPDATE users SET phone_verified=1")
 
     defaults = [
-        ('site_name', 'MalQara'),
+        ('site_name', 'MalQara.az'),
         ('anthropic_api_key', ''),
         ('contact_phone', '+994 XX XXX XX XX'),
         ('contact_email', 'info@malqara.az'),
@@ -134,7 +134,7 @@ def init_db():
 
     # Rebrand miqrasiyası (MalBazari → HeyvanBazar → MalQara): yalnız hələ də
     # köhnə standart dəyər saxlanılıbsa yenilə — adminin əl ilə qoyduğunu pozma.
-    c.execute("UPDATE settings SET value='MalQara' WHERE key='site_name' AND value IN ('MalBazari.biz','HeyvanBazar')")
+    c.execute("UPDATE settings SET value='MalQara.az' WHERE key='site_name' AND value IN ('MalBazari.biz','HeyvanBazar','MalQara')")
     c.execute("UPDATE settings SET value='info@malqara.az' WHERE key='contact_email' AND value IN ('info@malbazari.biz','info@heyvanbazar.az')")
 
     from werkzeug.security import generate_password_hash
