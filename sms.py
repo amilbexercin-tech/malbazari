@@ -96,4 +96,4 @@ def send_sms(phone, text):
 
 def send_otp(phone, code):
     """Təsdiq kodunu SMS ilə göndərir."""
-    return send_sms(phone, f"MalBazari.biz təsdiq kodunuz: {code}")
+    return send_sms(phone, f"HeyvanBazar təsdiq kodunuz: {code}")

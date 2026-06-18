@@ -246,6 +246,25 @@ def run_maintenance():
         _maintenance_lock.release()
 
 
+# Əsas (canonical) domen — təyin olunsa, bütün digər hostlar buraya 301 yönləndirilir.
+# Domen alınmayana qədər boş qalır → heç bir yönləndirmə olmur (sayt eyni işləyir).
+# Domen bağlananda Railway Variables-ə əlavə et: CANONICAL_HOST=heyvanbazar.az
+CANONICAL_HOST = os.environ.get('CANONICAL_HOST', '').strip().lower()
+
+
+@app.before_request
+def _canonical_host_redirect():
+    # /health istisna — UptimeRobot/Railway istənilən hostda yoxlaya bilsin.
+    if not CANONICAL_HOST or request.path == '/health':
+        return
+    host = (request.host or '').split(':')[0].lower()
+    if host and host != CANONICAL_HOST:
+        path = request.full_path
+        if path.endswith('?'):
+            path = path[:-1]
+        return redirect(f'https://{CANONICAL_HOST}{path}', code=301)
+
+
 @app.before_request
 def _maintenance_before_request():
     run_maintenance()
@@ -260,7 +279,7 @@ def inject_globals():
         'purposes': PURPOSES,
         'sort_options': SORT_OPTIONS,
         'subcategory_examples': SUBCATEGORY_EXAMPLES,
-        'site_name': db.get_setting('site_name', 'MalBazari.biz'),
+        'site_name': db.get_setting('site_name', 'HeyvanBazar'),
         'current_user': db.get_user_by_id(session['user_id']) if 'user_id' in session else None,
         'now': datetime.now(),
         'db_setting': db.get_setting,
@@ -561,7 +580,7 @@ def two_factor_setup():
             return redirect(url_for('backup_codes_view'))
         flash('Kod yanlışdır, yenidən cəhd edin.', 'danger')
     uri = pyotp.totp.TOTP(secret).provisioning_uri(name=user['phone'],
-                                                   issuer_name='MalBazari.biz')
+                                                   issuer_name='HeyvanBazar')
     return render_template('two_factor_setup.html', qr=_qr_data_uri(uri), secret=secret)
 
 @app.route('/2fa-berpa-kodlari')

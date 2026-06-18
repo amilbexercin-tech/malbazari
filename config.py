@@ -107,7 +107,7 @@ OTP_TTL_SECONDS = 300          # kodun etibarlılıq müddəti (5 dəqiqə)
 SMS_PROVIDER = os.environ.get('SMS_PROVIDER', 'dev')
 SMS_ACCOUNT_SID = os.environ.get('SMS_ACCOUNT_SID', '')  # Twilio Account SID
 SMS_API_KEY = os.environ.get('SMS_API_KEY', '')          # Twilio Auth Token
-SMS_SENDER = os.environ.get('SMS_SENDER', '')            # Göndərən nömrə (+1...) və ya ad (məs. "MalBazari")
+SMS_SENDER = os.environ.get('SMS_SENDER', '')            # Göndərən nömrə (+1...) və ya ad (məs. "HeyvanBazar")
 # LSIM.az (yerli AZ provayder) üçün
 SMS_LOGIN = os.environ.get('SMS_LOGIN', '')              # LSIM login
 SMS_PASSWORD = os.environ.get('SMS_PASSWORD', '')        # LSIM parol

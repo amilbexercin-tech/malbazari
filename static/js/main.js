@@ -1,4 +1,4 @@
-/* MalBazari.biz — Main JS */
+/* HeyvanBazar — Main JS */
 
 // ── Navbar scroll effect ──
 const navbar = document.getElementById('navbar');

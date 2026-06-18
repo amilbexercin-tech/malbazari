@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 {% block title %}Sayt Haqqında — {{ site_name }}{% endblock %}
-{% block desc %}MalBazari.biz — Azərbaycanda mal-qara, quşçuluq və arıçılıq məhsullarının alqı-satqısı üçün ən etibarlı pulsuz elan platforması.{% endblock %}
+{% block desc %}HeyvanBazar — Azərbaycanda mal-qara, quşçuluq və arıçılıq məhsullarının alqı-satqısı üçün ən etibarlı pulsuz elan platforması.{% endblock %}
 
 {% block content %}
 <div class="container page-content">
 
   <!-- ── HERO ─────────────────────────────────────────────── -->
   <section class="about-hero">
-    <div class="about-hero-icon">🐄</div>
-    <h1>MalBazari<span>.biz</span> haqqında</h1>
+    <div class="about-hero-icon"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="88" height="88"></div>
+    <h1>Heyvan<span>Bazar</span> haqqında</h1>
     <p>Azərbaycanda mal-qara, quşçuluq və arıçılıq məhsullarının alqı-satqısı üçün<br>
        ən böyük pulsuz elan platforması</p>
     <div class="about-stats-row">

@@ -51,7 +51,7 @@ def send_to_telegram(zip_path):
                 f'\r\n\r\n{value}\r\n').encode()
 
     body = part('chat_id', TELEGRAM_CHAT_ID)
-    body += part('caption', f'MalBazari yedək — {fname}')
+    body += part('caption', f'HeyvanBazar yedək — {fname}')
     body += (f'--{boundary}\r\nContent-Disposition: form-data; name="document"; '
              f'filename="{fname}"\r\nContent-Type: application/zip\r\n\r\n').encode()
     body += file_bytes + f'\r\n--{boundary}--\r\n'.encode()

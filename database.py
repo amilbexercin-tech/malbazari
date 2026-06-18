@@ -121,16 +121,21 @@ def init_db():
                 c.execute("UPDATE users SET phone_verified=1")
 
     defaults = [
-        ('site_name', 'MalBazari.biz'),
+        ('site_name', 'HeyvanBazar'),
         ('anthropic_api_key', ''),
         ('contact_phone', '+994 XX XXX XX XX'),
-        ('contact_email', 'info@malbazari.biz'),
+        ('contact_email', 'info@heyvanbazar.az'),
         ('social_tiktok', ''),
         ('social_instagram', ''),
         ('social_whatsapp', ''),
     ]
     for k, v in defaults:
         c.execute("INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)", (k, v))
+
+    # Rebrand miqrasiyası (MalBazari → HeyvanBazar): yalnız hələ də köhnə
+    # standart dəyər saxlanılıbsa yenilə — adminin əl ilə qoyduğu dəyəri pozma.
+    c.execute("UPDATE settings SET value='HeyvanBazar' WHERE key='site_name' AND value='MalBazari.biz'")
+    c.execute("UPDATE settings SET value='info@heyvanbazar.az' WHERE key='contact_email' AND value='info@malbazari.biz'")
 
     from werkzeug.security import generate_password_hash
     admin_hash = generate_password_hash(ADMIN_PASSWORD)

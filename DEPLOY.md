@@ -1,4 +1,4 @@
-# MalBazari.biz — Yayım (Deployment) Təlimatı
+# HeyvanBazar — Yayım (Deployment) Təlimatı
 
 ## 1. Ətraf mühit dəyişənləri (production-da MÜTLƏQ təyin et)
 
@@ -43,7 +43,7 @@ gunicorn -c gunicorn_config.py wsgi:app
 ```nginx
 server {
     listen 80;
-    server_name malbazari.biz www.malbazari.biz;
+    server_name heyvanbazar.az www.heyvanbazar.az;
 
     client_max_body_size 16M;          # şəkil yükləmə limiti
 
@@ -62,14 +62,14 @@ server {
 }
 ```
 
-HTTPS üçün: `certbot --nginx -d malbazari.biz -d www.malbazari.biz`
+HTTPS üçün: `certbot --nginx -d heyvanbazar.az -d www.heyvanbazar.az`
 
 ## 5. systemd servisi (avtomatik başlatma) nümunəsi
 
 `/etc/systemd/system/malbazari.service`:
 ```ini
 [Unit]
-Description=MalBazari Gunicorn
+Description=HeyvanBazar Gunicorn
 After=network.target
 
 [Service]
