@@ -462,7 +462,11 @@ def ai_search_route():
     """AI axtarış: adi dildə sorğunu filtrlərə çevirib uyğun elanları göstərir.
     API açarı yoxdursa və ya AI xəta verərsə → adi açar söz axtarışına keçir."""
     q = request.args.get('q', '').strip()
+    cat = request.args.get('cat', '').strip()
     if not q:
+        # Söz yoxdursa amma kateqoriya seçilibsə — kateqoriya səhifəsinə apar
+        if cat in CATEGORIES:
+            return redirect(url_for('category', slug=cat))
         return redirect(url_for('index'))
     page = int(request.args.get('page', 1))
 
@@ -471,12 +475,18 @@ def ai_search_route():
 
     if parsed is None:
         # Fallback — adi açar söz axtarışı (istifadəçi fərq görmür, sayt sınmır)
-        rows, total = db.get_listings(search=q, page=page, per_page=20, sort='new')
+        rows, total = db.get_listings(search=q,
+                                      category=cat if cat in CATEGORIES else None,
+                                      page=page, per_page=20, sort='new')
         listings = [listing_to_dict(l) for l in rows]
         pages = (total + 19) // 20
         return render_template('ai_search.html', q=q, listings=listings,
                                total=total, page=page, pages=pages,
                                understood=None, ai_used=False)
+
+    # İstifadəçi açıq kateqoriya seçibsə — onun seçimi AI-dan üstündür
+    if cat in CATEGORIES:
+        parsed['category'] = cat
 
     # AI-ın anladığı filtrlər → mövcud axtarış
     filters = {

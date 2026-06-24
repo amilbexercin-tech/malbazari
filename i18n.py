@@ -36,6 +36,7 @@ TRANSLATIONS = {
     'ai_search_title':{'az': 'AI Axtarış', 'ru': 'AI Поиск', 'en': 'AI Search'},
     'ai_search_ph':  {'az': 'məs: Gəncədə 1500 manata qədər südlük inək...', 'ru': 'напр: дойная корова до 1500 манат в Гяндже...', 'en': 'e.g. dairy cow under 1500 AZN in Ganja...'},
     'ai_search_btn': {'az': '✨ AI ilə axtar', 'ru': '✨ Искать с AI', 'en': '✨ Search with AI'},
+    'ai_search_btn_short':{'az': 'AI ilə axtar', 'ru': 'Искать с AI', 'en': 'Search with AI'},
     'ai_search_sub': {'az': 'Nə axtardığınızı adi dildə yazın — AI sizin üçün tapsın', 'ru': 'Напишите обычными словами, что ищете — AI найдёт', 'en': 'Describe what you want in plain words — AI finds it'},
     'advanced_filter':{'az': 'Ətraflı filtr', 'ru': 'Подробный фильтр', 'en': 'Advanced filter'},
     'ai_understood': {'az': 'AI nə anladı:', 'ru': 'AI понял:', 'en': 'AI understood:'},

@@ -15,22 +15,7 @@
       {{ stats.active_listings }}+ {{ t('active_listings') }} · {{ stats.total_users }}+ {{ t('users') }}
     </p>
     <div class="hero-search animate-slide-up delay-2">
-      <!-- AI axtarış (əsas) -->
-      <form action="{{ url_for('ai_search_route') }}" method="get" class="ai-search-form">
-        <div class="ai-search-inner">
-          <i class="fas fa-wand-magic-sparkles ai-search-icon"></i>
-          <input type="text" name="q" required maxlength="200"
-                 placeholder="{{ t('ai_search_ph') }}" autocomplete="off">
-          <button type="submit">{{ t('ai_search_btn') }}</button>
-        </div>
-        <p class="ai-search-sub">{{ t('ai_search_sub') }}</p>
-      </form>
-
-      <!-- Ətraflı filtr (gizli — düymə ilə açılır) -->
-      <button type="button" class="advanced-filter-toggle" onclick="toggleAdvancedFilter()">
-        <i class="fas fa-sliders-h"></i> {{ t('advanced_filter') }} <i class="fas fa-chevron-down" id="advFilterChevron"></i>
-      </button>
-      <form action="{{ url_for('search') }}" method="get" class="hero-search-form" id="advancedFilter" style="display:none">
+      <form action="{{ url_for('ai_search_route') }}" method="get" class="hero-search-form">
         <div class="hero-search-inner">
           <select name="cat">
             <option value="">{{ t('all_categories') }}</option>
@@ -39,7 +24,7 @@
             {% endfor %}
           </select>
           <input type="text" name="q" placeholder="{{ t('search_hint') }}">
-          <button type="submit"><i class="fas fa-search"></i> {{ t('search_btn') }}</button>
+          <button type="submit"><i class="fas fa-search"></i> {{ t('ai_search_btn_short') }}</button>
         </div>
       </form>
     </div>
