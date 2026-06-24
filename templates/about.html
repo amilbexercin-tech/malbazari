@@ -260,13 +260,16 @@
   <section class="about-section">
     <h2 class="about-section-title">📞 Bizimlə əlaqə</h2>
     <div class="about-contact-grid">
-      <a href="tel:{{ db_setting('contact_phone') }}" class="about-contact-card">
+      {% set cphone = db_setting('contact_phone') %}
+      {% if cphone and 'X' not in cphone %}
+      <a href="tel:{{ cphone | replace(' ', '') }}" class="about-contact-card">
         <i class="fas fa-phone-alt"></i>
         <div>
           <strong>Telefon</strong>
-          <span>{{ db_setting('contact_phone') }}</span>
+          <span>{{ cphone }}</span>
         </div>
       </a>
+      {% endif %}
       <a href="mailto:{{ db_setting('contact_email') }}" class="about-contact-card">
         <i class="fas fa-envelope"></i>
         <div>

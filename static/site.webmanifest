@@ -1,0 +1,23 @@
+{
+  "name": "MalQara.az",
+  "short_name": "MalQara",
+  "description": "Azərbaycanda mal-qara, quş və arı məhsulları alqı-satqısı platforması",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a7a3c",
+  "lang": "az",
+  "icons": [
+    {
+      "src": "/static/img/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/img/logo3d.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

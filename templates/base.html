@@ -5,8 +5,37 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>{% block title %}{{ site_name }}{% endblock %}</title>
 <meta name="description" content="{% block desc %}Azərbaycanda mal-qara, quş və arı məhsulları alqı-satqısı üçün ən böyük elan platforması{% endblock %}">
+
+{# ── Canonical URL (təkrar məzmun problemini həll edir) ── #}
+<link rel="canonical" href="{% block canonical %}{{ request.base_url }}{% endblock %}">
+
+{# ── OpenGraph (Facebook/WhatsApp/Telegram paylaşım kartı) ── #}
+<meta property="og:type" content="{% block og_type %}website{% endblock %}">
+<meta property="og:site_name" content="{{ site_name }}">
+<meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
+<meta property="og:description" content="{% block og_desc %}{{ self.desc() }}{% endblock %}">
+<meta property="og:url" content="{{ request.url }}">
+<meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='img/logo3d.png', _external=True) }}{% endblock %}">
+<meta property="og:locale" content="{{ {'az':'az_AZ','ru':'ru_RU','en':'en_US'}.get(lang, 'az_AZ') }}">
+
+{# ── Twitter kartı ── #}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{% block tw_title %}{{ self.title() }}{% endblock %}">
+<meta name="twitter:description" content="{% block tw_desc %}{{ self.desc() }}{% endblock %}">
+<meta name="twitter:image" content="{% block tw_image %}{{ url_for('static', filename='img/logo3d.png', _external=True) }}{% endblock %}">
+
+{# ── İkonlar + mobil tətbiq (PWA / Apple) ── #}
 <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo3d.png') }}">
+<link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+<meta name="theme-color" content="#1a7a3c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="{{ site_name }}">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
@@ -167,8 +196,14 @@
     </div>
     <div class="footer-links">
       <h4>{{ t('contact') }}</h4>
-      <a href="tel:{{ db_setting('contact_phone') }}"><i class="fas fa-phone"></i> {{ db_setting('contact_phone') }}</a>
-      <a href="mailto:{{ db_setting('contact_email') }}"><i class="fas fa-envelope"></i> {{ db_setting('contact_email') }}</a>
+      {% set cphone = db_setting('contact_phone') %}
+      {% if cphone and 'X' not in cphone %}
+      <a href="tel:{{ cphone | replace(' ', '') }}"><i class="fas fa-phone"></i> {{ cphone }}</a>
+      {% endif %}
+      {% set cemail = db_setting('contact_email') %}
+      {% if cemail %}
+      <a href="mailto:{{ cemail }}"><i class="fas fa-envelope"></i> {{ cemail }}</a>
+      {% endif %}
       <p style="margin-top:8px;font-size:13px;color:#aaa">{{ t('location') }}</p>
     </div>
   </div>

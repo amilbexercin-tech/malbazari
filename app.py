@@ -42,6 +42,8 @@ app = Flask(__name__)
 app.secret_key = SECRET_KEY
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
+# Statik fayllar (CSS/JS/şəkil) brauzerdə 30 gün keşlənsin — təkrar yüklənmə azalır.
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(days=30)
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
@@ -49,6 +51,14 @@ app.config.update(
     # Lokal HTTP üçün defolt False (yoxsa sessiya kukisi göndərilmir).
     SESSION_COOKIE_SECURE=os.environ.get('SESSION_COOKIE_SECURE', '').lower() in ('1', 'true', 'yes'),
 )
+
+# GZIP sıxılma — HTML/CSS/JS cavabları sıxılıb göndərilir (sürət + trafik qənaəti).
+# Paket yoxdursa sayt yenə işləyir (sadəcə sıxılma olmur).
+try:
+    from flask_compress import Compress
+    Compress(app)
+except Exception as _e:
+    print(f'Flask-Compress işə düşmədi (sıxılma sönülü): {_e}')
 
 # CSRF qoruması — bütün POST formaları və AJAX sorğuları üçün token tələb olunur
 csrf = CSRFProtect(app)
@@ -268,6 +278,42 @@ def _canonical_host_redirect():
 @app.before_request
 def _maintenance_before_request():
     run_maintenance()
+
+
+# ─── Təhlükəsizlik başlıqları (HTTP response headers) ──────────────────────────
+# Brauzer-səviyyəli qoruma: clickjacking, MIME-sniffing, XSS, məcburi HTTPS və CSP.
+# CSP saytın istifadə etdiyi xarici mənbələrə (Google Fonts, Font Awesome CDN,
+# Leaflet/unpkg, OpenStreetMap kafelləri, Monaco redaktoru) icazə verir.
+_CSP = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com; "
+    "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
+    "img-src 'self' data: https:; "
+    "connect-src 'self'; "
+    "worker-src 'self' blob:; "
+    "frame-ancestors 'self'; "
+    "base-uri 'self'; "
+    "form-action 'self'; "
+    "object-src 'none'"
+)
+
+
+@app.after_request
+def _security_headers(resp):
+    resp.headers.setdefault('X-Frame-Options', 'SAMEORIGIN')
+    resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
+    resp.headers.setdefault('X-XSS-Protection', '1; mode=block')
+    resp.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+    resp.headers.setdefault('Permissions-Policy',
+                            'geolocation=(self), microphone=(), camera=(), payment=()')
+    resp.headers.setdefault('Content-Security-Policy', _CSP)
+    # HSTS — yalnız production-da (lokal HTTP-də brauzer onsuz da nəzərə almır,
+    # amma DEBUG-da göndərməyək ki, lokal təcrübə təmiz qalsın).
+    if not DEBUG:
+        resp.headers.setdefault('Strict-Transport-Security',
+                                'max-age=31536000; includeSubDomains')
+    return resp
 
 
 @app.context_processor
