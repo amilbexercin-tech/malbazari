@@ -1109,6 +1109,16 @@ def admin_health():
                            h=diagnostics.collect_health(),
                            test_result=test_result)
 
+@app.route('/admin/ai-test')
+@admin_required
+def admin_ai_test():
+    """MÜVƏQQƏTİ — AI axtarışın diaqnostikası. Brauzerdə açıb nəticəni göndər.
+    Diaqnostika bitəndən sonra bu route silinə bilər."""
+    q = request.args.get('q', 'Gəncədə 1500 manata qədər südlük inək')
+    api_key = db.get_setting('anthropic_api_key')
+    return jsonify(ai_search.diagnose(q, api_key))
+
+
 @app.route('/admin/telegram-test', methods=['POST'])
 @admin_required
 def admin_telegram_test():

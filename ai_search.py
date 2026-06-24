@@ -100,6 +100,35 @@ def _clean(raw):
     return out
 
 
+def diagnose(text, api_key):
+    """MÜVƏQQƏTİ diaqnostika — AI çağırışının harada sındığını göstərir.
+    Admin /admin/ai-test endpoint-i istifadə edir. Sonra silinə bilər."""
+    info = {'has_key': bool(api_key), 'model': MODEL, 'step': 'start',
+            'error': None, 'raw': None, 'parsed': None}
+    if not (text and api_key):
+        info['step'] = 'missing-input'
+        return info
+    try:
+        import anthropic
+        info['anthropic_version'] = getattr(anthropic, '__version__', '?')
+        client = anthropic.Anthropic(api_key=api_key)
+        info['step'] = 'calling-api'
+        msg = client.messages.create(
+            model=MODEL, max_tokens=400,
+            system=_build_system_prompt(),
+            messages=[{"role": "user", "content": text[:500]}],
+        )
+        info['step'] = 'got-response'
+        content = msg.content[0].text.strip()
+        info['raw'] = content[:1000]
+        info['parsed'] = parse_query(text, api_key)
+        info['step'] = 'done'
+    except Exception as e:
+        info['step'] = 'exception'
+        info['error'] = f'{type(e).__name__}: {e}'
+    return info
+
+
 def parse_query(text, api_key):
     """Sorğu mətnini təmizlənmiş filtr dict-inə çevirir. Xətada None."""
     text = (text or '').strip()
