@@ -118,3 +118,13 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     }
   });
 });
+
+// ── Ətraflı filtr toggle (ana səhifə AI axtarış) ──
+function toggleAdvancedFilter() {
+  var f = document.getElementById('advancedFilter');
+  var btn = document.querySelector('.advanced-filter-toggle');
+  if (!f) return;
+  var open = f.style.display !== 'none';
+  f.style.display = open ? 'none' : 'block';
+  if (btn) btn.classList.toggle('open', !open);
+}

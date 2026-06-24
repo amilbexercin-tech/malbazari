@@ -31,6 +31,18 @@ TRANSLATIONS = {
     'all_categories':{'az': 'Bütün kateqoriyalar', 'ru': 'Все категории', 'en': 'All categories'},
     'search_hint':   {'az': 'İnək, qoyun, bal...', 'ru': 'Корова, овца, мёд...', 'en': 'Cow, sheep, honey...'},
     'search_btn':    {'az': 'Axtar', 'ru': 'Найти', 'en': 'Search'},
+
+    # ── AI axtarış ──
+    'ai_search_title':{'az': 'AI Axtarış', 'ru': 'AI Поиск', 'en': 'AI Search'},
+    'ai_search_ph':  {'az': 'məs: Gəncədə 1500 manata qədər südlük inək...', 'ru': 'напр: дойная корова до 1500 манат в Гяндже...', 'en': 'e.g. dairy cow under 1500 AZN in Ganja...'},
+    'ai_search_btn': {'az': '✨ AI ilə axtar', 'ru': '✨ Искать с AI', 'en': '✨ Search with AI'},
+    'ai_search_sub': {'az': 'Nə axtardığınızı adi dildə yazın — AI sizin üçün tapsın', 'ru': 'Напишите обычными словами, что ищете — AI найдёт', 'en': 'Describe what you want in plain words — AI finds it'},
+    'advanced_filter':{'az': 'Ətraflı filtr', 'ru': 'Подробный фильтр', 'en': 'Advanced filter'},
+    'ai_understood': {'az': 'AI nə anladı:', 'ru': 'AI понял:', 'en': 'AI understood:'},
+    'ai_fallback_note':{'az': 'Adi axtarış nəticələri göstərilir.', 'ru': 'Показаны результаты обычного поиска.', 'en': 'Showing standard search results.'},
+    'ai_no_results': {'az': 'Uyğun elan tapılmadı', 'ru': 'Подходящих объявлений не найдено', 'en': 'No matching listings found'},
+    'ai_no_results_sub':{'az': 'Başqa sözlərlə cəhd edin və ya ətraflı filtrdən istifadə edin', 'ru': 'Попробуйте другие слова или подробный фильтр', 'en': 'Try other words or use the advanced filter'},
+    'ai_back_home':  {'az': 'Ana səhifəyə qayıt', 'ru': 'На главную', 'en': 'Back to home'},
     'active_listings':{'az': 'aktiv elan', 'ru': 'активных объявлений', 'en': 'active listings'},
     'users':         {'az': 'istifadəçi', 'ru': 'пользователей', 'en': 'users'},
     'stat_active':   {'az': 'Aktiv Elan', 'ru': 'Активные', 'en': 'Active'},

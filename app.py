@@ -20,6 +20,7 @@ from PIL import Image
 import database as db
 import i18n
 import sms
+import ai_search
 from config import (SECRET_KEY, UPLOAD_FOLDER, MAX_CONTENT_LENGTH,
                     CATEGORIES, REGIONS, BASE_DIR, MAX_IMAGES,
                     SUBCATEGORY_EXAMPLES, DEBUG, PURPOSES, SORT_OPTIONS,
@@ -454,6 +455,87 @@ def search():
     return render_template('search.html', listings=listings, total=total,
                            q=q, page=page, pages=pages, region=region, cat=category,
                            f=request.args, sort=filters['sort'])
+
+@app.route('/ai-axtar')
+@limiter.limit("20 per hour")
+def ai_search_route():
+    """AI axtarış: adi dildə sorğunu filtrlərə çevirib uyğun elanları göstərir.
+    API açarı yoxdursa və ya AI xəta verərsə → adi açar söz axtarışına keçir."""
+    q = request.args.get('q', '').strip()
+    if not q:
+        return redirect(url_for('index'))
+    page = int(request.args.get('page', 1))
+
+    api_key = db.get_setting('anthropic_api_key')
+    parsed = ai_search.parse_query(q, api_key) if api_key else None
+
+    if parsed is None:
+        # Fallback — adi açar söz axtarışı (istifadəçi fərq görmür, sayt sınmır)
+        rows, total = db.get_listings(search=q, page=page, per_page=20, sort='new')
+        listings = [listing_to_dict(l) for l in rows]
+        pages = (total + 19) // 20
+        return render_template('ai_search.html', q=q, listings=listings,
+                               total=total, page=page, pages=pages,
+                               understood=None, ai_used=False)
+
+    # AI-ın anladığı filtrlər → mövcud axtarış
+    filters = {
+        'category': parsed.get('category'),
+        'subcategory': parsed.get('subcategory'),
+        'region': parsed.get('region'),
+        'search': parsed.get('keywords'),
+        'price_min': parsed.get('price_min'),
+        'price_max': parsed.get('price_max'),
+        'weight_min': parsed.get('weight_min'),
+        'weight_max': parsed.get('weight_max'),
+        'purpose': parsed.get('purpose'),
+        'vaccinated': parsed.get('vaccinated'),
+        'breed': parsed.get('breed'),
+        'sort': 'new',
+    }
+    rows, total = db.get_listings(page=page, per_page=20,
+                                  **{k: v for k, v in filters.items() if v is not None})
+    listings = [listing_to_dict(l) for l in rows]
+    pages = (total + 19) // 20
+
+    # "AI nə anladı" çipləri üçün insan-oxunaqlı siyahı
+    understood = _humanize_filters(parsed)
+    return render_template('ai_search.html', q=q, listings=listings,
+                           total=total, page=page, pages=pages,
+                           understood=understood, ai_used=True)
+
+
+def _humanize_filters(parsed):
+    """AI-ın çıxardığı filtrləri istifadəçiyə göstərmək üçün qısa nişanlara çevir."""
+    chips = []
+    if parsed.get('category'):
+        chips.append(CATEGORIES[parsed['category']]['name'])
+    if parsed.get('subcategory'):
+        chips.append(parsed['subcategory'])
+    if parsed.get('region'):
+        chips.append('📍 ' + parsed['region'])
+    if parsed.get('purpose'):
+        chips.append(parsed['purpose'])
+    if parsed.get('breed'):
+        chips.append(parsed['breed'])
+    pmin, pmax = parsed.get('price_min'), parsed.get('price_max')
+    if pmin is not None and pmax is not None:
+        chips.append(f'{pmin:g}–{pmax:g} ₼')
+    elif pmax is not None:
+        chips.append(f'≤ {pmax:g} ₼')
+    elif pmin is not None:
+        chips.append(f'≥ {pmin:g} ₼')
+    wmin, wmax = parsed.get('weight_min'), parsed.get('weight_max')
+    if wmax is not None:
+        chips.append(f'≤ {wmax:g} kq')
+    elif wmin is not None:
+        chips.append(f'≥ {wmin:g} kq')
+    if parsed.get('vaccinated') == 1:
+        chips.append('💉 peyvəndli')
+    if parsed.get('keywords'):
+        chips.append('🔍 ' + parsed['keywords'])
+    return chips
+
 
 # ─── Auth Routes ─────────────────────────────────────────────────────────────
 
