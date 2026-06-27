@@ -33,3 +33,4 @@ env/
 .DS_Store
 Thumbs.db
 .gstack/
+.idea/

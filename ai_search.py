@@ -12,8 +12,11 @@ MODEL = "claude-haiku-4-5-20251001"
 _VALID_CATEGORIES = set(CATEGORIES.keys())
 _VALID_REGIONS = set(REGIONS)
 _VALID_PURPOSES = set(PURPOSES)
+_VALID_SORTS = {'new', 'old', 'price_asc', 'price_desc'}
 # Bütün alt-kateqoriyalar (kateqoriyadan asılı olmadan doğrulama üçün)
 _VALID_SUBCATEGORIES = {s for c in CATEGORIES.values() for s in c['subcategories']}
+# "təxminən 1200" / "1200-lük" → 1200 ətrafında ±20% aralıq
+_PRICE_ABOUT_BAND = 0.2
 
 
 def _build_system_prompt():
@@ -41,17 +44,25 @@ Yalnız aşağıdakı sahələri olan TƏMİZ JSON qaytar (izahat yox, markdown 
   "region": "<dəqiq rayon adı və ya null>",
   "price_min": <ədəd və ya null>,
   "price_max": <ədəd və ya null>,
+  "price_about": <təxmini qiymət ədədi və ya null>,
   "weight_min": <kq ədəd və ya null>,
   "weight_max": <kq ədəd və ya null>,
   "purpose": "<dəqiq məqsəd və ya null>",
   "vaccinated": <true, false və ya null>,
   "breed": "<cins adı və ya null>",
+  "sort": "<new | old | price_asc | price_desc və ya null>",
   "keywords": "<qalan açar sözlər və ya null>"
 }}
 
 Qaydalar:
 - Yalnız verilmiş siyahılardan dəqiq dəyər seç; uyğun gəlməsə null qoy.
-- "ucuz" qiymət filtri deyil — keywords-ə də qoyma, sadəcə nəzərə alma.
+- QİYMƏT:
+  - "1200-ə qədər", "max 1200", "1200 manatdan ucuz" → price_max=1200
+  - "1200-dən", "1200 manatdan yuxarı", "min 1200" → price_min=1200
+  - "1200 ilə 2000 arası" → price_min=1200, price_max=2000
+  - Sadəcə rəqəm və ya "1200-lük", "1200 manatlıq", "təxminən 1200", "1200 AZN-lik" → price_about=1200 (price_min/max-ı boş burax)
+- SIRALAMA (sort): "ən ucuz / ucuzdan / sərfəli" → "price_asc"; "ən bahalı / bahadan / baha" → "price_desc"; "ən yeni / təzə" → "new"; "ən köhnə / əvvəlki" → "old". Sıralama tələbi yoxdursa null.
+- Sıralama sözünü (ucuz/baha/yeni) keywords-ə qoyma.
 - Əmin olmadığın sahəni null burax. Heç bir sahə uydurma."""
 
 
@@ -74,8 +85,14 @@ def _clean(raw):
     if cat in _VALID_CATEGORIES:
         out['category'] = cat
     sub = raw.get('subcategory')
-    if sub in _VALID_SUBCATEGORIES:
-        out['subcategory'] = sub
+    if sub:
+        # Kateqoriya seçilibsə, alt-kateqoriya MƏHZ ona aid olmalıdır
+        # (yoxsa "mal-qara + Toyuq" kimi uyğunsuz cütlük 0 nəticə verir).
+        if 'category' in out:
+            if sub in CATEGORIES[out['category']]['subcategories']:
+                out['subcategory'] = sub
+        elif sub in _VALID_SUBCATEGORIES:
+            out['subcategory'] = sub
     region = raw.get('region')
     if region in _VALID_REGIONS:
         out['region'] = region
@@ -86,6 +103,18 @@ def _clean(raw):
         n = _coerce_num(raw.get(k))
         if n is not None and n >= 0:
             out[k] = n
+    # "təxminən 1200" → açıq min/max yoxdursa 1200 ətrafında ±20% aralıq qur
+    about = _coerce_num(raw.get('price_about'))
+    if about is not None and about > 0 and 'price_min' not in out and 'price_max' not in out:
+        out['price_min'] = round(about * (1 - _PRICE_ABOUT_BAND))
+        out['price_max'] = round(about * (1 + _PRICE_ABOUT_BAND))
+    # min > max tərsdirsə yerini dəyiş (yoxsa aralıq boş gəlir)
+    for lo, hi in (('price_min', 'price_max'), ('weight_min', 'weight_max')):
+        if lo in out and hi in out and out[lo] > out[hi]:
+            out[lo], out[hi] = out[hi], out[lo]
+    sort = raw.get('sort')
+    if sort in _VALID_SORTS:
+        out['sort'] = sort
     vacc = raw.get('vaccinated')
     if vacc is True:
         out['vaccinated'] = 1

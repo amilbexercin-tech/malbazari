@@ -501,7 +501,7 @@ def ai_search_route():
         'purpose': parsed.get('purpose'),
         'vaccinated': parsed.get('vaccinated'),
         'breed': parsed.get('breed'),
-        'sort': 'new',
+        'sort': parsed.get('sort') or 'new',
     }
     rows, total = db.get_listings(page=page, per_page=20,
                                   **{k: v for k, v in filters.items() if v is not None})
@@ -542,6 +542,14 @@ def _humanize_filters(parsed):
         chips.append(f'≥ {wmin:g} kq')
     if parsed.get('vaccinated') == 1:
         chips.append('💉 peyvəndli')
+    sort_labels = {
+        'price_asc': '↑ ucuzdan baha',
+        'price_desc': '↓ bahadan ucuz',
+        'new': '🆕 ən yeni',
+        'old': '🕓 ən köhnə',
+    }
+    if parsed.get('sort') in sort_labels:
+        chips.append(sort_labels[parsed['sort']])
     if parsed.get('keywords'):
         chips.append('🔍 ' + parsed['keywords'])
     return chips
